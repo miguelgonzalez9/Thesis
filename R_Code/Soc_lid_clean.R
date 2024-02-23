@@ -1,40 +1,65 @@
+############### Lid analysis prep. 
+
 # Load data -----------------------------------------------------
 vict_inv <- read.csv("D:/Documents/GitHub/Thesis/Data/Final_data/SISFUT_Final/SISFUT_fin_2015-2020.csv")
 lideres <- read.csv("D:/Documents/GitHub/Thesis/Data/Conflicto Armado/Lideres_sociales/Listado_2016-2023.csv", sep = ";")
 
-# Transform Data ----------------------------------
+# Clean Data ----------------------------------
 
-## RDD Treatment rule: two months before july --> 1; two month after --> 0. RDD -------------------
+## Load leaders dataset
 colnames(lideres) <- c("No", "nombre", "sex", "date", "mun", "dpto", "respon", "organization", "social_sector", "organization_cacep")
 lideres <- lideres %>% mutate(date = dmy(date), 
-                              treat = case_when(
-                                month(date) <= 6 ~ 1,
-                                month(date) >= 8 ~ 0,
-                                month(date) == 7 ~ NA), 
                               year = year(date), 
                               month = month(date), 
+                              day = day(date),
                               lid_assas = 1, 
-                              cod = paste0(mun,year,dpto))
-lideres <- lideres %>% spread(key = respon, value)
+                              cod = paste0(mun,year,dpto), 
+                              respon = stri_trans_general(respon, id = "Latin-ASCII") %>% 
+                                str_replace_all(pattern = "\\n", " ") %>% tolower())
 
+## Clean respon variable--------------------------------
 
-lideres_mun_RD <- lideres %>% group_by(dpto, mun, year) %>% summarise(treated = ifelse(any(treat == 1), 1, 0),
-                                                                   treat_inten = sum(treat),
-                                                             respon = paste(unique(respon), collapse = "\n"), 
-                                                             organizacion = paste(c(unique(organizacion), unique(organi_cacep)), collapse = "\n"))
+lideres["respon"][lideres["respon"] == "desconocido s"] <- "unknown"
+lideres["respon"][lideres["respon"] == "paramilitare s"] <- "paramilitary"
+lideres["respon"][lideres["respon"] == "policia"] <- "policia nacional"
+lideres["respon"][lideres["respon"] == "disidencia"] <- "disidencias"
+lideres["respon"][lideres["respon"] == "desconocido"] <- "unknown"
+lideres["respon"][lideres["respon"] == "omar marrugo villadiego - excompanero sentimental"] <- "remove"
+lideres["respon"][lideres["respon"] == ""] <- NA
 
-table(lideres_mun_RD$treated, lideres_mun$year)
+insuregency <- c("eln", "epl", "disidencias")
+paramilitary <- c("paramilitary", "agc", "seguridad privada", "augc", "acg", 
+                  "paramilitares - clan de sinaloa", "clan del golfo")
+criminal_bands <- c("urabenos", "gaor", "aguilas negras", "caparrapos", 
+                    "ejercito - gaor", "ejerciito nacional")
+gov <- c("policia - ejercito nacional", "ejercito", "policia nacional", 
+         "ejercito colombiano - xi brigada", "policia - ejercito", "ejercito nacional", 
+         "esmad", "ejercito - gaor")
+
+lideres <- lideres %>% mutate(
+  insurgent_respon = as.integer(respon %in% insuregency), 
+  paramilitary_respon = as.integer(respon %in% paramilitary), 
+  bacrim_respon = as.integer(respon %in% criminal_bands), 
+  gov_respon = as.integer(respon %in% gov)
+)
+
+unique(lideres$respon)
+
+## Clean organization variables -------------------------
+
+unique(lideres$organization)
+
 
 ## DID. Treatment rule: social leader killing on that year. ------------------
 
 
 ### Rule -------------------------
 lideres <- lideres %>% mutate(mun = stri_trans_general(mun, id = "Latin-ASCII") %>% 
-                              str_remove(pattern = "\\n|\\r|-|") %>% tolower() %>% 
-                              str_replace_all(" ", ""), 
-                            dpto = stri_trans_general(dpto, id = "Latin-ASCII") %>% 
-                              str_remove(pattern = "\\n|\\r|-|") %>% tolower() %>% 
-                              str_replace_all(" ", ""))
+                                str_remove(pattern = "\\n|\\r|-|") %>% tolower() %>% 
+                                str_replace_all(" ", ""), 
+                              dpto = stri_trans_general(dpto, id = "Latin-ASCII") %>% 
+                                str_remove(pattern = "\\n|\\r|-|") %>% tolower() %>% 
+                                str_replace_all(" ", ""))
 
 lideres_mun_DID <- lideres %>% group_by(dpto, mun, year) %>% summarise(treated = ifelse(any(lid_assas == 1), 1, 0),
                                                                        treat_inten = sum(lid_assas),
@@ -88,12 +113,12 @@ for(i in 1:length(unique(lideres_mun_DID$cod))) {
 }
 
 mult_to_un <- matrix(c("sanjosedeurecordoba", "sanjosedeurebolivar", "patiacauca", "elbordocauca", 
-                           "eltambocauca", "mosqueracauca", "puracecauca", "paletaracauca", 
-                           "riosuciochoco", "pedeguitachoco", "fortularauca", "fortulcasanare", 
-                           "magaoeinarino", "maguipayannarino", "laplayanortedesantander", "playadebelennortedesantander",
-                           "puertosantandernortedesantander","puertosantandersantander", "mahatesbolivar", "sanbasiliosucre",
-                           "buenaventuravalledelcauca", "buenaventuravalle", "guadalajaradebugavalledelcauca", "bugavalledelcauca",
-                           "calivalledelcauca", "santiagodecalivalledelcauca"), ncol = 2, byrow = T) %>% as.data.frame()
+                       "eltambocauca", "mosqueracauca", "puracecauca", "paletaracauca", 
+                       "riosuciochoco", "pedeguitachoco", "fortularauca", "fortulcasanare", 
+                       "magaoeinarino", "maguipayannarino", "laplayanortedesantander", "playadebelennortedesantander",
+                       "puertosantandernortedesantander","puertosantandersantander", "mahatesbolivar", "sanbasiliosucre",
+                       "buenaventuravalledelcauca", "buenaventuravalle", "guadalajaradebugavalledelcauca", "bugavalledelcauca",
+                       "calivalledelcauca", "santiagodecalivalledelcauca"), ncol = 2, byrow = T) %>% as.data.frame()
 colnames(dist_unique) <- c("cod_vic_inv", "cod_lid")
 colnames(mult_to_un) <- c("cod_vic_inv", "cod_lid")
 dist <- rbind(dist_unique,mult_to_un)
@@ -105,8 +130,8 @@ full_d_DID <- vict_inv %>%
 
 full_d_DID <- full_d_DID %>% mutate(
   treated = case_when(
-  is.na(treated) ~ 0, 
-  T ~ treated),
+    is.na(treated) ~ 0, 
+    T ~ treated),
   treat_inten = case_when(
     is.na(treat_inten) ~ 0,
     T ~ treat_inten), 
