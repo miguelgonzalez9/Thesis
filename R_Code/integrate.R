@@ -15,7 +15,7 @@ package_list <-
     "plm", "bayesplot", "sandwich", "tseries", "car", "lmtest", "multiwayvcov", 
     "lfe", "tidyverse", "bacondecomp", "ggiplot", "didimputation", "readxl", "baggr", "rstan", "rlist", "bayesplot",
     "gridExtra", "grid", "ggpmisc", "stringi", "modelsummary", "estimatr", "fastDummies", 
-    "fuzzyjoin", "lubridate")
+    "fuzzyjoin", "lubridate", "rdd", "stringdist")
 
 if(installation_needed){install.packages(package_list)}
 if(loading_needed){lapply(package_list, require, character.only = TRUE)}
@@ -26,18 +26,23 @@ conflicts_prefer(ggplot2::annotate)
 
 tidy=TRUE
 
+path <- "D:/Documents/GitHub/Thesis/R_Code"
+setwd(path)
+
 # Working directory -------------------------------------------------------
 options(qwraps2_markup = "markdown")
 options(scipen=999)
 
-path <- "D:/Documents/GitHub/Thesis/R_Code"
-setwd(path)
-
-# Cleaning and merging datafiles --------------------------------------------------------------
-source("data_cleaning_SISFUT_2017_2020.R")
-source("data_cleaning_SISFUT_2015_2016.R")
 
 # Final Expenditure cleaning and saving
-source("final_clean_exp.R")
+source("final_clean_spend.R")
 
+# Elections data cleaning.  
+source("elections_cleaning.R")
+
+# Social leaders cleaning
+source("Soc_lid_clean.R")
+
+# Merging elections, spending and municipality characteristics. 
+source("final_baseline_data.R")
 
