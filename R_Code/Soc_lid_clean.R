@@ -1,12 +1,14 @@
-############### Lid analysis prep. 
+
+
 vict_inv <- read.csv("D:/Documents/GitHub/Thesis/Data/Final_data/SISFUT_Final/SISFUT_fin_2015-2020.csv")
 lideres <- read.csv("D:/Documents/GitHub/Thesis/Data/Conflicto Armado/Lideres_sociales/Listado_2016-2023.csv", sep = ";")
 lideres_sd <- read.csv("D:/Documents/GitHub/Thesis/Data/Conflicto Armado/Lideres_sociales/casos-somosdefensores_2000_2023.csv")
 mun_char <- read_dta("D:/Documents/GitHub/Thesis/Data/CEDE/PANEL_CARACTERISTICAS_GENERALES(2022).dta")
 
+
 # Clean Data Leaders INDEPAZ ----------------------------------
-colnames(lideres_somos_defensores)
-## Load leaders dataset
+
+## Load leaders dataset -------
 colnames(lideres) <- c("No", "nombre", "sex", "date", "mun", "dpto", "respon", "organization", "social_sector", "organization_cacep")
 lideres <- lideres %>% mutate(date = dmy(date), 
                               year = year(date), 
@@ -105,7 +107,7 @@ mult_to_un <- matrix(c("riosuciochoco", "pedeguitachoco", "calivalledelcauca", "
                        "cacotanortedesantander", "lejiaarauca", "apartadoantioquia", "sanjosedeapartadocordoba", 
                        "sanjosedeurecordoba", "sanjosedeurebolivar","sanbenitoabadsucre", "sanbasiliosucre", 
                        "eltambocauca", "mosqueracauca", "fortularauca", "fortulcasanare"), ncol = 2, byrow = T) %>% as.data.frame()
-# Merge
+### Merge-----------------
 colnames(dist_unique) <- c("cod_vic_inv", "cod_lid")
 colnames(mult_to_un) <- c("cod_vic_inv", "cod_lid")
 dist <- rbind(dist_unique,mult_to_un)
@@ -114,7 +116,7 @@ lideres <- lideres %>% left_join(dist, by = c("cod" = "cod_lid"))
 if (dim(lideres[is.na(lideres$codmpio),])[1] != 0){
   warning("NAs in merge")
 }
-# 5 Digit code
+### 5 Digit code ---------------
 lideres$codmpio <- as.character(lideres$codmpio)
 lideres <- lideres %>% 
   mutate(codmpio = case_when(
@@ -151,15 +153,13 @@ lideres <- lideres %>% mutate(
 # Clean Leaders Somos Defensores ----------------
 
 lideres_sd <- read.csv("D:/Documents/GitHub/Thesis/Data/Conflicto Armado/Lideres_sociales/casos-somosdefensores_2000_2023.csv")
-# Load leaders dataset
 colnames(lideres_sd) <- c("id", "date", "location", "victims", "respon",  "type", "report")
 lideres_sd$date <- as.Date(lideres_sd$date)
-# Expand multi value cells
+
+## Expand multi value cells --------------
 lideres_sd <- lideres_sd %>% filter(location != "") %>% distinct()
 lideres_sd <- lideres_sd %>% mutate(across(where(is.character), ~ as.integer(str_detect(.x, ",")), .names = "multi_{col}")) %>% 
   select(-multi_report) 
-
-
 
 split_multicell <- function(df, col, pattern){
   df_1 <- df[0,]
@@ -188,7 +188,7 @@ lideres_sd <- split_multicell(lideres_sd, "victims", ", ")
   # Multi cell indicator
 lideres_sd <- lideres_sd %>% group_by(id) %>% mutate(dup = n() - 1) %>% ungroup()
 
-# Get muns and dptos
+## Extract muns and dptos -------------------------
 loc <- str_split_fixed(lideres_sd$location, pattern = "/", n = 2)
 lideres_sd$dpto <- loc[,1]
 lideres_sd$mun <- loc[,2]
@@ -199,7 +199,8 @@ lideres_sd <- lideres_sd %>% mutate(mun = case_when(
   victims == "JAIME  REYES SAMPIER" ~ "Tame",
   T ~ mun
 ))
-# Clean string variables
+
+## Clean string variables --------------------------
 #View(lideres_sd %>% select(mun, dpto) %>% unique())
 clean_string <- function(x){
   y <- x %>% str_c(collapse = "---") %>% 
@@ -254,16 +255,16 @@ paramilitary <- c("paramilitares|auc|milicias")
 criminal_bands <- c("bandas criminales|alianzas criminales")
 gov <- c("fuerza publica|ejercito|fuerza aerea|policia|ejercito|estado colombiano|ejercito|agentes estado")
 
-## Str detect any.
+## Create dummy variables -----------------------------------
 
 lideres_sd <- lideres_sd %>% mutate(
   insurgent_respon = as.integer(str_detect(respon, insuregency) | str_detect(report, insuregency)),
-  paramilitary_respon = as.integer(str_detect(respon, paramilitary) | str_detect(report, paramilitary)), 
+  param_respon = as.integer(str_detect(respon, paramilitary) | str_detect(report, paramilitary)), 
   bacrim_respon = as.integer(str_detect(respon, criminal_bands) | str_detect(report, criminal_bands)), 
   gov_respon =as.integer(str_detect(respon, gov) | str_detect(report, gov))
 )
 
-## Clean municipality code. ----------------------
+## Clean municipality code. ------------------------------
 
 lideres_sd <- lideres_sd %>% mutate(mun = stri_trans_general(mun, id = "Latin-ASCII") %>% 
                                 str_remove(pattern = "//n|//r|-|") %>% tolower() %>% 
@@ -326,7 +327,7 @@ if (dim(lideres_sd[is.na(lideres_sd$codmpio),])[1] != 0){
   warning("NAs in merge")
 }
 
-# 5 Digit code
+### 5 Digit code ------------------------
 lideres_sd$codmpio <- as.character(lideres_sd$codmpio)
 lideres_sd <- lideres_sd %>% 
   mutate(codmpio = case_when(
@@ -348,17 +349,17 @@ lideres_sd <- lideres_sd %>% mutate(
   comunal_sector = as.integer(str_detect(report, "comunal|comunitaria|junta de accion comunal|JAC|consejo comunitario")), 
   lgbt_sector = as.integer(str_detect(report, "lgtb|lgbt")), 
   campesino_sector = as.integer(str_detect(report, "campesin|tierras|reclamante")),
-  indigenas_sector = as.integer(str_detect(report, "indigena|igena|minga|minguero|cabildo")), 
-  afrodesendiente_sector = as.integer(str_detect(report, "afrodescen|negritud|palenque")), 
+  indig_sector = as.integer(str_detect(report, "indigena|igena|minga|minguero|cabildo")), 
+  afro_sector = as.integer(str_detect(report, "afrodescen|negritud|palenque")), 
   sindical_sector = as.integer(str_detect(report, "sindic|obrer")), 
   ambiental_sector = as.integer(str_detect(report, "ambiental|sostenible|minrero|mineria|consevacion|medio ambient|ecolog")), 
-  victimas_sector = as.integer(str_detect(report, "victima|desplazad")), 
+  victim_sector = as.integer(str_detect(report, "victima|desplazad")), 
   pnis_sector = as.integer(str_detect(report, "pnis|sustitucion de cultivos")), 
   izq_sector = as.integer(str_detect(report, partidos_izq)), 
   mujer_secor = as.integer(str_detect(report, "femenina|feminismo|feminista"))
 )
 
-# Extract age 
+## Extract age ------------------------------------ 
 lideres_sd$age <- NA
 for (i in 1:nrow(lideres_sd)) {
   pat <- paste0("(?<=", str_c(str_split_1(lideres_sd$victims[i], "[:blank:]+"), collapse = "."),".de.)[:digit:]+")
@@ -372,12 +373,15 @@ for (i in 1:nrow(lideres_sd)) {
   
 }
 
-# RD leaders
+# RD leaders -----------------------------------------------
 lideres_RD <- lideres %>% group_by(year, codmpio) %>% summarise(
   lid = n()) %>% ungroup() %>% mutate(source_lid = "INDEPAZ")
 
 lideres_RD_sd <- lideres_sd %>% group_by(year, codmpio) %>% summarise(
   lid = n()) %>% mutate(source_lid = "SD")
+
+## Graphs ---------------------------
+
 lideres_g <- rbind(lideres_RD,lideres_RD_sd)
 lideres_g <- lideres_g %>% group_by(year, source_lid) %>% summarise(lid = sum(lid, na.rm = T)) %>% 
   filter(year != "2023")
@@ -390,7 +394,7 @@ lideres_RD_sd <- lideres_sd %>% group_by(year, codmpio) %>% summarise(
   lid_SD = n()) %>% ungroup()
 lideres_RD <- full_join(lideres_RD, lideres_RD_sd) %>% complete(year, codmpio,  fill = list(lid_SD = 0, lid_INDEPAZ = 0))
 
-# Lags and leads
+## Lags and leads --------------------------------
 lideres_RD <- lideres_RD %>%
   arrange(year) %>%
   mutate(
@@ -403,3 +407,58 @@ lideres_RD <- lideres_RD %>%
     lag1_lid_SD = lag(lid_SD, n = 1),
     lag2_lid_SD = lag(lid_SD, n = 2)
   )
+
+## Subpop variables --------------------------
+
+subpop_lid <- function(df, var_group, group, num_cond = T){
+  if(!is.numeric(group) & num_cond){
+    stop("Argument not numeric")
+  }
+  df_temp <- lideres_sd[lideres_sd[var_group] == group,]
+  
+  df_temp <- df_temp %>% group_by(year, codmpio) %>% summarise(lid = n()) %>% ungroup()
+  colnames(df_temp)[3] <- paste0(var_group, "_lid")
+  return(df_temp)
+
+}
+
+spec_subpop = c("param_respon", "insurgent_respon","gov_respon", "comunal_sector", "izq_sector", "pnis_sector")
+
+for (i in spec_subpop) {
+  lideres_RD <- lideres_RD %>% left_join(subpop_lid(lideres_sd, i, 1, T), by = c("year", "codmpio"))
+}
+
+lideres_RD <- lideres_RD %>% 
+  mutate(across(param_respon_lid:pnis_sector_lid, 
+                ~ ifelse(is.na(.x), 0, .x)))
+
+## Normalize variables with populations
+pop_data <- mun_char %>% select(pobl_tot, codmpio, ano)
+pop_data$codmpio <- as.character(pop_data$codmpio)
+
+pop_data <- pop_data %>% 
+  mutate(codmpio = case_when(
+    str_count(codmpio) == 4 ~ paste0("0", codmpio), 
+    T ~ codmpio
+  ))
+
+lideres_RD <- lideres_RD %>% left_join(pop_data, by = c("codmpio", "year" = "ano"))
+lideres_RD <- lideres_RD %>% 
+  mutate(pobl_tot = case_when(pobl_tot == 0 ~ NA, T ~ pobl_tot)) %>% 
+  mutate(across(!year & !codmpio & !pobl_tot, 
+                ~ 1000*.x/pobl_tot, 
+                .names = "{col}_pop"))
+
+
+lideres_RD <- lideres_RD %>% mutate(across(!year & !codmpio & !pobl_tot, 
+                list(
+                  lag1 = ~lag(.x, n = 1, order_by = year), 
+                  lag2 = ~lag(.x, n = 2, order_by = year), 
+                  lead1 = ~lead(.x, n = 1, order_by = year),
+                  lead2 = ~lead(.x, n = 2, order_by = year)), 
+                .names = "{.fn}_{.col}"))
+
+rm(spec_subpop, dist, dist_df, dist_mult, dist_unique, lideres, 
+   lideres_g, lideres_RD_sd, lideres_sd, 
+   pop_data)
+
