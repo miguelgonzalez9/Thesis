@@ -1,4 +1,4 @@
-
+## Load data
 
 vict_inv <- read.csv("D:/Documents/GitHub/Thesis/Data/Final_data/SISFUT_Final/SISFUT_fin_2015-2020.csv")
 lideres <- read.csv("D:/Documents/GitHub/Thesis/Data/Conflicto Armado/Lideres_sociales/Listado_2016-2023.csv", sep = ";")
@@ -8,7 +8,7 @@ mun_char <- read_dta("D:/Documents/GitHub/Thesis/Data/CEDE/PANEL_CARACTERISTICAS
 
 # Clean Data Leaders INDEPAZ ----------------------------------
 
-## Load leaders dataset -------
+
 colnames(lideres) <- c("No", "nombre", "sex", "date", "mun", "dpto", "respon", "organization", "social_sector", "organization_cacep")
 lideres <- lideres %>% mutate(date = dmy(date), 
                               year = year(date), 
@@ -161,29 +161,6 @@ lideres_sd <- lideres_sd %>% filter(location != "") %>% distinct()
 lideres_sd <- lideres_sd %>% mutate(across(where(is.character), ~ as.integer(str_detect(.x, ",")), .names = "multi_{col}")) %>% 
   select(-multi_report) 
 
-split_multicell <- function(df, col, pattern){
-  df_1 <- df[0,]
-  # Iterate 
-  for (i in 1:nrow(df)) {
-    # When cell with ,
-    if(str_detect(df[i, col], pattern = pattern)){
-      print(c(i, "row dup"))
-      nc <- unlist(str_split(df[i, col], pattern))
-      d_temp <- df[rep(i, length(nc)),] # Duplicate rows
-      d_temp[, col] <- nc # Replace
-      print(c(colnames(d_temp)))
-      print(c(colnames(df_1)))
-      df_1 <- rbind(df_1, d_temp) # Save in new df
-    }
-    else {
-      # Else append row
-      df_1 <- rbind(df_1, df[i, ])
-    }
-    
-  }
-  return(df_1)
-} 
-
 lideres_sd <- split_multicell(lideres_sd, "victims", ", ")
   # Multi cell indicator
 lideres_sd <- lideres_sd %>% group_by(id) %>% mutate(dup = n() - 1) %>% ungroup()
@@ -202,14 +179,6 @@ lideres_sd <- lideres_sd %>% mutate(mun = case_when(
 
 ## Clean string variables --------------------------
 #View(lideres_sd %>% select(mun, dpto) %>% unique())
-clean_string <- function(x){
-  y <- x %>% str_c(collapse = "---") %>% 
-    str_replace_all(c("ú" = "u","é" = "e","ü" = "u", 
-                      "á" = "a", "ó" = "o", "\u0081" = "", "\u008d" = "",
-                      "ñ" = "n",  "�" = "i", "\t" = "", "i"" = "o")) %>% 
-    strsplit(split = "---") %>% unlist() %>% tolower()
-    return(y)
-}
 
 lideres_sd <- lideres_sd %>% mutate(across(where(is.character), clean_string)) %>% 
   mutate(across(where(is.character), ~ stri_trans_general(.x, id = "Latin-ASCII"))) %>% 
@@ -295,13 +264,6 @@ dist_df <- dist_name_matrix %>%
 
 
 ### Probabilistic merge ----------------
-
-min_dist_str <- function(x,y){
-  dist <- stringdist(x,  y, method = "lv")
-  m_dist <- min(dist)
-  match_n <- y[dist == m_dist]
-  return(match_n)
-}
 
 dist_unique <- data.frame()
 dist_mult <- data.frame()
@@ -394,20 +356,6 @@ lideres_RD_sd <- lideres_sd %>% group_by(year, codmpio) %>% summarise(
   lid_SD = n()) %>% ungroup()
 lideres_RD <- full_join(lideres_RD, lideres_RD_sd) %>% complete(year, codmpio,  fill = list(lid_SD = 0, lid_INDEPAZ = 0))
 
-## Lags and leads --------------------------------
-lideres_RD <- lideres_RD %>%
-  arrange(year) %>%
-  mutate(
-    lead1_lid_INDEPAZ = lead(lid_INDEPAZ, n = 1),
-    lead2_lid_INDEPAZ = lead(lid_INDEPAZ, n = 2),
-    lag1_lid_INDEPAZ = lag(lid_INDEPAZ, n = 1),
-    lag2_lid_INDEPAZ = lag(lid_INDEPAZ, n = 2),
-    lead1_lid_SD = lead(lid_SD, n = 1),
-    lead2_lid_SD = lead(lid_SD, n = 2),
-    lag1_lid_SD = lag(lid_SD, n = 1),
-    lag2_lid_SD = lag(lid_SD, n = 2)
-  )
-
 ## Subpop variables --------------------------
 
 subpop_lid <- function(df, var_group, group, num_cond = T){
@@ -432,31 +380,6 @@ lideres_RD <- lideres_RD %>%
   mutate(across(param_respon_lid:pnis_sector_lid, 
                 ~ ifelse(is.na(.x), 0, .x)))
 
-## Normalize variables with populations
-pop_data <- mun_char %>% select(pobl_tot, codmpio, ano)
-pop_data$codmpio <- as.character(pop_data$codmpio)
-
-pop_data <- pop_data %>% 
-  mutate(codmpio = case_when(
-    str_count(codmpio) == 4 ~ paste0("0", codmpio), 
-    T ~ codmpio
-  ))
-
-lideres_RD <- lideres_RD %>% left_join(pop_data, by = c("codmpio", "year" = "ano"))
-lideres_RD <- lideres_RD %>% 
-  mutate(pobl_tot = case_when(pobl_tot == 0 ~ NA, T ~ pobl_tot)) %>% 
-  mutate(across(!year & !codmpio & !pobl_tot, 
-                ~ 1000*.x/pobl_tot, 
-                .names = "{col}_pop"))
-
-
-lideres_RD <- lideres_RD %>% mutate(across(!year & !codmpio & !pobl_tot, 
-                list(
-                  lag1 = ~lag(.x, n = 1, order_by = year), 
-                  lag2 = ~lag(.x, n = 2, order_by = year), 
-                  lead1 = ~lead(.x, n = 1, order_by = year),
-                  lead2 = ~lead(.x, n = 2, order_by = year)), 
-                .names = "{.fn}_{.col}"))
 
 rm(spec_subpop, dist, dist_df, dist_mult, dist_unique, lideres, 
    lideres_g, lideres_RD_sd, lideres_sd, 

@@ -32,7 +32,13 @@ setwd(path)
 # Working directory -------------------------------------------------------
 options(qwraps2_markup = "markdown")
 options(scipen=999)
+start_time <- 2012
+end_time <- 2023
 
+
+
+# Load fuctions
+source("functions.R")
 
 # Final Expenditure cleaning and saving
 source("final_clean_spend.R")
@@ -40,8 +46,13 @@ source("final_clean_spend.R")
 # Elections data cleaning.  
 source("elections_cleaning.R")
 
+# Population data
+source("population_clean.R")
+
 # Social leaders cleaning
-source("Soc_lid_clean.R")
+# source("Soc_lid_clean.R") Run manually
+source("SIVel_cleaning.R")
+source("SIEVAC_clean.R")
 
 # Merging elections, spending and municipality characteristics. 
 source("final_baseline_data.R")
