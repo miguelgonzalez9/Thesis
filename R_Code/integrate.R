@@ -15,7 +15,7 @@ package_list <-
     "plm", "bayesplot", "sandwich", "tseries", "car", "lmtest", "multiwayvcov", 
     "lfe", "tidyverse", "bacondecomp", "ggiplot", "didimputation", "readxl", "baggr", "rstan", "rlist", "bayesplot",
     "gridExtra", "grid", "ggpmisc", "stringi", "modelsummary", "estimatr", "fastDummies", 
-    "fuzzyjoin", "lubridate", "rdd", "stringdist")
+    "fuzzyjoin", "lubridate", "rdrobust", "stringdist", "kableExtra")
 
 if(installation_needed){install.packages(package_list)}
 if(loading_needed){lapply(package_list, require, character.only = TRUE)}
@@ -34,7 +34,6 @@ options(qwraps2_markup = "markdown")
 options(scipen=999)
 start_time <- 2012
 end_time <- 2023
-
 
 
 # Load fuctions

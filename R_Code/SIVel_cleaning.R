@@ -84,8 +84,6 @@ pol_vio <- pol_vio %>% mutate(insurgent_respon = case_when(
 ))
 
 ## Municipality clean and code
-
-
 pol_vio <- pol_vio %>% mutate(mun = stri_trans_general(mun, id = "Latin-ASCII") %>% 
                                       str_remove(pattern = "//n|//r|-|") %>% tolower() %>% 
                                       str_replace_all(" ", ""), 
@@ -105,7 +103,7 @@ mnames <- mun_char %>% select(municipio, depto, codmpio) %>% distinct() %>%
 
 dist_name_matrix <- adist(unique(pol_vio$cod), unique(mnames$cod), partial = TRUE, ignore.case = TRUE)
 colnames(dist_name_matrix) <- unique(mnames$cod)
-rownames(dist_name_matrix) <- unique(lideres_sd$cod)
+rownames(dist_name_matrix) <- unique(pol_vio$cod)
 
 dist_df <- dist_name_matrix %>% 
   as.data.frame() %>% 

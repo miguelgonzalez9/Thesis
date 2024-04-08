@@ -27,7 +27,11 @@ elec <- elec %>%
     T ~ codmpio
   ))
 
-elect_right <- election_share(elec, 2, c(2015, 2019)) 
+# Clean elec
+elec <- elec %>% filter(!is.na(ideologia))
+
+
+elect_right <- election_share(elec, 2, c(2015, 2019))
 elect_left <- election_share(elec, 1, c(2015, 2019)) 
 
 elect_left <- elect_left %>% rename(year = "ano") %>% select(-coddpto)

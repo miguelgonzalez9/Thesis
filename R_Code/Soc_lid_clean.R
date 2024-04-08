@@ -381,7 +381,3 @@ lideres_RD <- lideres_RD %>%
                 ~ ifelse(is.na(.x), 0, .x)))
 
 
-rm(spec_subpop, dist, dist_df, dist_mult, dist_unique, lideres, 
-   lideres_g, lideres_RD_sd, lideres_sd, 
-   pop_data)
-

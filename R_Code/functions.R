@@ -7,12 +7,9 @@ split_multicell <- function(df, col, pattern){
     for (i in 1:nrow(df)) {
       # When cell has comma
       if(str_detect(df[i, col], pattern = pattern)){
-        print(c(i, "row dup"))
         nc <- unlist(str_split(df[i, col], pattern))
         d_temp <- df[rep(i, length(nc)),] # Duplicate rows
         d_temp[, col] <- nc # Replace
-        print(c(colnames(d_temp)))
-        print(c(colnames(df_1)))
         df_1 <- rbind(df_1, d_temp) # Save in new df
       }
       else {
@@ -37,7 +34,6 @@ split_multicell <- function(df, col, pattern){
         # All columns same number of commas
         if(all(count_s1 == count_s1[1])){
           # For each column: split and save in df
-          print(count_s1[1])
           # Repeat rows the number of commas + 1. i.e. one comma --> two obs
           d_temp <- df[rep(i, count_s1[1] + 1),]
           for (j in 1:length(col_comma)) {
@@ -135,8 +131,6 @@ summarize_data_count_2 <- function(df, cols, new_names){
   
 }
 
-
-
 election_share <- function(df, ideol, elec_years){
   
   mayor <- df %>% filter(curules == 1) %>% 
@@ -166,6 +160,7 @@ election_share <- function(df, ideol, elec_years){
            tradicional_incum, part_camara, part_concejo, part_gobernacion, 
            part_senado)
   
+  
   # Create running variable. 
   df <- df %>% group_by(ano, codmpio) %>% 
     mutate(total_votes = sum(votos)) %>% ungroup()%>% 
@@ -173,6 +168,7 @@ election_share <- function(df, ideol, elec_years){
            right_ideol = case_when(ideologia == ideol ~ 1, 
                                    ideologia != ideol ~ 0, 
                                    is.na(ideologia) ~ 0))
+  
   ## Running variable
   df <- df  %>%  pivot_wider(
     id_cols = ano:codmpio,
@@ -181,7 +177,7 @@ election_share <- function(df, ideol, elec_years){
                     tradicional, ideol_incum, tradicional_incum, part_camara, 
                     part_concejo, part_gobernacion, part_senado)
   )
-  print(head(df %>% select(vote_share_1, vote_share_0)))
+
   var_name <- paste0("share_diff", as.character(ideol))
   df <- df %>% mutate(!!(var_name) := vote_share_1-vote_share_0) %>% 
     select(-c(ideol_incum_0, tradicional_incum_0)) %>% 
@@ -204,4 +200,74 @@ left_join_rep <- function(df1, df2, by){
   print(paste0("There are ", ext_non_match, " non matched rows from external"))
   return(merged_dat)
 }
+
+
+reg_tab <- function(out_vars, controls_list, subset_logic, running_var, digits, 
+                    out_vars_names){
+  right_results <- matrix(nrow = 2*length(out_vars), ncol = 10)
+  right_results <- data.frame(right_results)
+  
+  i <- 1
+  for (out_v in out_vars) {
+    j <- 2
+    for (pol in c(1,2)){
+      for (c in controls_list) {
+        if (c == "") {
+          mod <- rdrobust(RD_baseline[[out_v]], RD_baseline[[running_var]], p = pol, 
+                          all = T, subset = subset_logic)
+          beta <- round(mod$coef["Robust",], digits)
+          se <- round(mod$se["Robust",], digits)
+          bwd <- mod$bws[2,2]
+          obs <- sum(mod$N_h)
+          p_val <- mod$pv["Robust",]
+        }
+        else {
+          mod <- rdrobust(RD_baseline[[out_v]], RD_baseline[[running_var]], p = pol, 
+                          all = T, covs = RD_baseline[c], subset = subset_logic)
+          beta <- round(mod$coef["Robust",], digits)
+          se <- round(mod$se["Robust",], digits)
+          bwd <- mod$bws[2,2]
+          obs <- sum(mod$N_h)
+          p_val <- mod$pv["Robust",]
+        }
+        
+        if (p_val < 0.01){
+          beta <- paste0(beta, "***")
+        } else if (p_val < 0.05){
+          beta <- paste0(beta, "**")
+        } else if (p_val < 0.1){
+          beta <- paste0(beta, "*")
+        }
+        
+        right_results[2*i - 1,j] <- beta
+        right_results[2*i ,j] <- paste0("(", se, ")")
+        j <- j + 1
+        if(j ==9){
+          right_results[2*i-1,10] <- obs
+          right_results[2*i,10] <- ""
+        }
+        
+      }
+      
+      
+    }
+    i <- i + 1
+  }
+  ## Add covariates rows
+  g <- c("","NO", "YES", "NO", "YES", "NO", "YES", "NO", "YES", "")
+  s <- c("","NO", "NO", "YES", "YES", "NO", "NO", "YES", "YES", "")
+  p <- c("",1,1,1,1,2,2,2,2, "")
+  out_vars_names_1 <- out_vars_names
+  out_num <- 1:length(out_vars_names)
+  out_vars_names_1[2*out_num] <- ""
+  out_vars_names_1[2*out_num - 1] <- out_vars_names
+  out_names <- c(out_vars_names_1, "Geo Controls", "Socioeconomic Controls", 
+                         "Polynomial")
+  right_results <- right_results %>% rbind(g,s,p)
+  colnames(right_results) <- c("Dependent Variable","(1)", "(2)", "(3)", "(4)", "(5)", "(6)", "(7)", "(8)", "N")
+  right_results[,1] <- out_names
+  return(right_results)
+}
+
+
 

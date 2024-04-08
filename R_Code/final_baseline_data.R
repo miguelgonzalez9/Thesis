@@ -103,17 +103,32 @@ conflict_panel <- conflict_panel %>% left_join_rep(pop %>% filter(year %in% year
 conflict_panel <- conflict_panel %>% 
   mutate(population = case_when(population == 0 ~ NA, T ~ population)) %>% 
   mutate(across(conflict_vars, 
-                ~ 1000*.x/population, 
+                ~ 100000*.x/population, 
                 .names = "pop_{col}"))
 
-## Lags and leads of normalized conflict vars  -------------
+## Lags and leads of normalized and not-normalized conflict vars  -------------
 conflict_panel <- conflict_panel %>% 
-  mutate(across(paste0("pop_",conflict_vars), list(
+  mutate(across(c(paste0("pop_",conflict_vars),conflict_vars), list(
     lag1 = ~lag(.x, n = 1, order_by = year), 
     lag2 = ~lag(.x, n = 2, order_by = year), 
     lead1 = ~lead(.x, n = 1, order_by = year),
-    lead2 = ~lead(.x, n = 2, order_by = year)), 
+    lead2 = ~lead(.x, n = 2, order_by = year),
+    lead3 = ~lead(.x, n = 3, order_by = year),
+    lead4 = ~lead(.x, n = 4, order_by = year)),
     .names = "{.fn}_{.col}"))
+
+for (i in conflict_vars) {
+  conflict_panel[paste0("lead12_",i)] <- conflict_panel[paste0("lead1_",i)] + conflict_panel[paste0("lead2_",i)]
+  conflict_panel[paste0("lead123_",i)] <- conflict_panel[paste0("lead1_",i)] + conflict_panel[paste0("lead2_",i)] + conflict_panel[paste0("lead3_",i)]
+  conflict_panel[paste0("lead1234_",i)] <- conflict_panel[paste0("lead1_",i)] + conflict_panel[paste0("lead2_",i)] + conflict_panel[paste0("lead3_",i)] + conflict_panel[paste0("lead4_",i)]
+}
+# Normalize using population at t. 
+conflict_panel <- conflict_panel %>% 
+  mutate(population = case_when(population == 0 ~ NA, T ~ population)) %>% 
+  mutate(across(starts_with("lead12")| starts_with("lead123") | starts_with("lead1234"), 
+                ~ 100000*.x/population, 
+                .names = "pop_{col}"))
+
 
 ### Filter municipalities average pop < 300.000
 conflict_panel <- conflict_panel %>% group_by(codmpio) %>% filter(mean(population) <= 300000) %>% ungroup()
@@ -152,7 +167,10 @@ RD_baseline <- conflict_panel %>% filter(year %in% c(2015,2019)) %>%
   left_join_rep(elect_left, by = c("codmpio", "year"))
 RD_baseline <- RD_baseline %>% left_join_rep(elect_right, by = c("codmpio", "year"))
 RD_baseline <- RD_baseline %>% left_join_rep(spend_data,  by = c("codmpio", "year"))
+# Conflict vars lead1 + lead2
+RD_baseline <- RD_baseline %>% mutate(across())
+conflict_vars
 
-write_dta(RD_baseline, "D:/Documents/GitHub/Thesis/Data/Final_data/RD_data.dta")
 
+#write_dta(RD_baseline, "D:/Documents/GitHub/Thesis/Data/Final_data/RD_data.dta")
 

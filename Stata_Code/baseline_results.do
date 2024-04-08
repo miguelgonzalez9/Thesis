@@ -139,19 +139,19 @@ lead*_pop_vio lead*pop_lid_asis lead*pop_threat lead*pop_collective_violence lea
 
 
 * Linear polynomials but with no covariates
-
+rdrobust V_payment_diff1 share_diff2_r, all p(1)  bwselect(mserd) 
 local bw= round(`e(h_l)',0.001)
 local bw_lin = round(`e(h_l)',0.001)
 local obs =`e(N_h_l)'+`e(N_h_r)'
 local poly = `e(p)'
-outreg2 using table_1a.tex, tex(frag) ctitle(" ") keep(Robust) nonotes addstat(Observations, `obs', Bandwidth, `bw', (Local) polynomial order, e(p)) afmt(fc) append noobs addtext(Geographic Controls, NO, Social Economic Controls, NO)
+outreg2 using table_1a.tex, tex(frag) ctitle(" ") nonotes addstat(Observations, `obs', Bandwidth, `bw', (Local) polynomial order, e(p)) afmt(fc) append noobs addtext(Geographic Controls, NO, Social Economic Controls, NO)
 * Linear polynomials but with geographical covariates
-rdrobust V_payment_diff1 X_it if ideol_incum != 2, all p(1)  bwselect(mserd) covs(`geo_controls')
+rdrobust V_payment_diff1 share_diff2_r, all p(1)  bwselect(mserd) covs(`geo_controls')
 local bw=round(`e(h_l)',0.001)
 local obs =`e(N_h_l)'+`e(N_h_r)'
 outreg2 using table_1a.tex, tex(frag) ctitle(" ") nonotes addstat(Observations, `obs', Bandwidth, `bw', (Local) polynomial order, e(p)) afmt(fc) append noobs addtext(Geographic Controls, YES, Social Economic Controls, NO) append
 * Linear polynomials with socio-economic covariates
-rdrobust V_payment_diff1 X_it if ideol_incum != 2, all p(1) bwselect(mserd) covs(`social_controls')
+rdrobust V_payment_diff1 share_diff2_r, all p(1) bwselect(mserd) covs(`social_controls')
 local bw=round(`e(h_l)',0.001)
 local obs =`e(N_h_l)'+`e(N_h_r)'
 outreg2 using table_1a.tex,  tex(frag) ctitle(" ") nonotes addstat(Observations, `obs', Bandwidth, `bw', (Local) polynomial order, e(p)) afmt(fc) append noobs addtext(Geographic Controls, NO, Social Economic Controls, YES)
@@ -162,7 +162,7 @@ local obs =`e(N_h_l)'+`e(N_h_r)'
 outreg2 using table_1a.tex,  tex(frag) ctitle(" ") nonotes addstat(Observations, `obs', Bandwidth, `bw', (Local) polynomial order, e(p)) afmt(fc) append noobs addtext(Geographic Controls, YES, Social Economic Controls, YES)
 
 * Quadratic polynomials
-rdrobust V_payment_diff1 X_it if ideol_incum_r != 2, all p(2) bwselect(mserd) 
+rdrobust V_payment_diff1 share_diff2_r, all p(2) bwselect(mserd) 
 local bw=round(`e(h_l)',0.001)
 local bw_quad = round(`e(h_l)',0.001)
 display `bw'
@@ -170,12 +170,12 @@ local poly2 = `e(p)'
 local obs =`e(N_h_l)'+`e(N_h_r)'
 outreg2 using table_1a.tex, tex(frag) ctitle(" ") nonotes addstat(Observations, `obs', Bandwidth, `bw', (Local) polynomial order, e(p)) afmt(fc) append label noobs addtext(Geographic Controls, NO, Social Economic Controls, NO)
 * Quadratic polynomials but with geographical covariates
-rdrobust V_payment_diff1 X_it if ideol_incum != 2, all p(2) bwselect(mserd) covs(`geo_controls')
+rdrobust V_payment_diff1 share_diff2_r, all p(2) bwselect(mserd) covs(`geo_controls')
 local bw=round(`e(h_l)',0.001)
 local obs =`e(N_h_l)'+`e(N_h_r)'
 outreg2 using table_1a.tex,  tex(frag) ctitle(" ") nonotes addstat(Observations, `obs', Bandwidth, `bw', (Local) polynomial order, e(p)) afmt(fc) append noobs addtext(Geographic Controls, YES, Social Economic Controls, NO)
 * Quadratic polynomials with socio-economic covariates
-rdrobust V_payment_diff1 X_it if ideol_incum != 2, all p(2) bwselect(mserd) covs(`social_controls')
+rdrobust V_payment_diff1 share_diff2_r, all p(2) bwselect(mserd) covs(`social_controls')
 local bw=round(`e(h_l)',0.001)
 local obs =`e(N_h_l)'+`e(N_h_r)'
 outreg2 using table_1a.tex,  tex(frag) ctitle(" ") nonotes addstat(Observations, `obs', Bandwidth, `bw', (Local) polynomial order, e(p)) afmt(fc) append noobs addtext(Geographic Controls, NO, Social Economic Controls, YES)
