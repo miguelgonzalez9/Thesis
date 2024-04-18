@@ -1,0 +1,51 @@
+\begin{table}[!h]
+
+\caption{Covariate Balance Table}
+\centering
+\begin{tabular}[t]{>{\centering\arraybackslash}p{4cm}cccccc}
+\toprule
+\multicolumn{1}{c}{} & \multicolumn{3}{c}{Right-Wing} & \multicolumn{3}{c}{Left-Wing} \\
+\cmidrule(l{3pt}r{3pt}){2-4} \cmidrule(l{3pt}r{3pt}){5-7}
+Dependent Variable & (1) & (2) & N & (1) & (2) & N\\
+\midrule
+Height & -41.30851 & 86.72006 & 351 & -1257.86402** & -1450.28723** & 79\\
+ & (287.9803) & (341.24019) &  & (609.40593) & (678.73681) & \\
+Area (km2) & -286.87002 & -813.67967 & 355 & 2569.73736 & 2019.56021 & 82\\
+ & (563.55364) & (614.21166) &  & (2311.04754) & (2784.2837) & \\
+Distance dpto capital & 31.38869 & 36.96138 & 366 & 66.54455 & 75.40307 & 113\\
+\addlinespace
+ & (24.00302) & (27.31241) &  & (54.62737) & (62.42062) & \\
+Distance market & -29.17548 & -34.90697 & 329 & 154.99522** & 144.80473** & 82\\
+ & (24.57033) & (28.27763) &  & (62.40426) & (67.70552) & \\
+Distance Bogotá & -66.30529 & -78.99887 & 332 & 266.87779** & 293.74159** & 88\\
+ & (54.67525) & (63.23801) &  & (106.37755) & (116.51559) & \\
+\addlinespace
+Number of credits & 17.81709 & 42.15463 & 282 & 29.70385 & -11.76541 & 83\\
+ & (43.0217) & (49.56859) &  & (104.51958) & (116.66541) & \\
+Value credits & -100.43287 & 12.18071 & 310 & -166.92677 & -430.34753 & 83\\
+ & (228.67334) & (264.74478) &  & (590.67062) & (683.68478) & \\
+Demobilized Paramilitaries & -0.52959 & 2.21035 & 309 & -0.09692 & -1.46113 & 82\\
+\addlinespace
+ & (1.84584) & (1.79385) &  & (5.28451) & (6.16279) & \\
+Demobilized Guerrillas & 1.27612 & 7.37459 & 327 & 13.37037 & 14.56112 & 91\\
+ & (8.34282) & (11.33462) &  & (13.80846) & (18.26844) & \\
+MPI & -3.97834 & -6.40098 & 353 & 7.60029 & 4.13127 & 99\\
+ & (4.79433) & (6.16168) &  & (8.03872) & (8.97339) & \\
+\addlinespace
+UBN & -1.53727 & -3.84155 & 365 & -9.3215 & -16.0353 & 82\\
+ & (4.89097) & (6.55084) &  & (9.06807) & (11.67132) & \\
+Different incumbent & -0.00271 & -0.03497 & 387 & -0.32556 & -0.3155 & 119\\
+ & (0.14449) & (0.17966) &  & (0.22488) & (0.24294) & \\
+Same incumbent & -0.00122 & 0.03773 & 385 & 0.32558 & 0.31771 & 116\\
+\addlinespace
+ & (0.14271) & (0.18007) &  & (0.22486) & (0.24605) & \\
+Polynomial & 1 & 2 &  & 1 & 2 & \\
+\bottomrule
+\multicolumn{7}{l}{\rule{0pt}{1em}\textit{Note: }}\\
+\multicolumn{7}{l}{\rule{0pt}{1em}This table presents balance results across continuous covariates. Robust standard erros are used following (cite cattolino), across different specification varying polynomial degree.}\\
+\multicolumn{7}{l}{\rule{0pt}{1em}\textsuperscript{1} Credit variables refer to the yearly-average number and value of credits acquired by small firms as defined and recorded by Agronet (cite CEDE) before 2015.}\\
+\multicolumn{7}{l}{\rule{0pt}{1em}\textsuperscript{2} Total number of demobilized soldiers before 2015, data from (CEDE).}\\
+\multicolumn{7}{l}{\rule{0pt}{1em}\textsuperscript{3} MPI stands for the multimentional poverty index at 2005.}\\
+\multicolumn{7}{l}{\rule{0pt}{1em}\textsuperscript{4} UBN stands for unsatisfied basic needs measured at 2005.}\\
+\end{tabular}
+\end{table}
