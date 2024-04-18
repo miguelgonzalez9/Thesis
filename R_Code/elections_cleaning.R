@@ -9,6 +9,9 @@ elec_2011 <- read_dta("D:/Documents/GitHub/Thesis/Data/Elections/Alcaldia/2011_a
 
 
 pol_ideol <- read_dta("D:/Documents/GitHub/Thesis/Data/Elections/CEDE/Microdatos/clasificacion_partidos_v1.dta")
+# Save pol_ideol as excel
+write_xlsx(pol_ideol, "D:/Documents/GitHub/Thesis/Data/Elections/CEDE/Microdatos/clasificacion_partidos_v1.xlsx")
+
 elec_2011 <- elec_2011 %>% left_join(pol_ideol, by = c("codigo_partido"))
 elec_2015 <- elec_2015 %>% left_join(pol_ideol, by = c("codigo_partido"))
 elec_2019 <- elec_2019 %>% left_join(pol_ideol, by = c("codigo_partido"))

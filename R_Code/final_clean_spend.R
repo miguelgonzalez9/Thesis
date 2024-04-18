@@ -13,9 +13,22 @@ spend_data_baseline <- spend_data %>% ungroup() %>%
   # Create log version of payments and lags: 2 posterior 1 prior to election year. 
   mutate(ln_payments = log(payments + 1),
          ln_payments_lead1 = lead(ln_payments, 1, order_by = year), 
-         ln_payments_lead2 = lead(ln_payments, 2, order_by = year), 
+         ln_payments_lead2 = lead(ln_payments, 2, order_by = year),
+         ln_payments_lead3 = lead(ln_payments, 3, order_by = year), 
+         ln_payments_lead4 = lead(ln_payments, 4, order_by = year),
          ln_payments_lag1 = lag(ln_payments, 1, order_by = year),
-         ln_payments_lag2 = lag(ln_payments, 2, order_by = year)
+         ln_payments_lag2 = lag(ln_payments, 2, order_by = year),
+         ln_payments_lag3 = lag(ln_payments, 3, order_by = year),
+         ln_payments_lag4 = lag(ln_payments, 4, order_by = year), 
+         
+         ln_payments_lead12 = ln_payments_lead1 +ln_payments_lead2, 
+         ln_payments_lead123 = ln_payments_lead1 +ln_payments_lead2 + ln_payments_lead3, 
+         ln_payments_lead1234 = ln_payments_lead1 +ln_payments_lead2 +ln_payments_lead3 + ln_payments_lead4,
+         
+         ln_payments_lag12 = ln_payments_lag1 +ln_payments_lag2, 
+         ln_payments_lag123 = ln_payments_lag1 +ln_payments_lag2 + ln_payments_lag3, 
+         ln_payments_lag1234 = ln_payments_lag1 +ln_payments_lag2 +ln_payments_lag3 + ln_payments_lag4,
+         
          )
 
 #  
@@ -26,6 +39,7 @@ colnames(spend_data_baseline_V)[!(colnames(spend_data_baseline_V) %in% c("cod_mu
 
 spend_data_baseline_V1 <- spend_data_baseline %>% 
   filter(cod_concepto == "V.1") %>% ungroup() %>% select(-cod_concepto) 
+
 x <- colnames(spend_data_baseline_V1)[!(colnames(spend_data_baseline_V1) %in% c("cod_mun", "year"))]
 colnames(spend_data_baseline_V1)[!(colnames(spend_data_baseline_V1) %in% c("cod_mun", "year"))] <- paste0("V1_",x)
 
