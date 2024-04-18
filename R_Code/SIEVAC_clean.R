@@ -41,3 +41,4 @@ SIEVAC <- SIEVAC %>% select(c(tot_cobat_state:tot_victims) | c(param_respon_ab:b
   group_by(codmpio, year) %>% 
   summarise(across(everything(), ~ sum(.x, na.rm = T))) 
 SIEVAC <- SIEVAC %>% filter(codmpio != "00000") %>% select(-param_respon_ab)
+write.csv(SIEVAC,  "D:/Documents/GitHub/Thesis/Data/Final_data/SIEVAC_RD.csv")

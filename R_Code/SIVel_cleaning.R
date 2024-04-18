@@ -12,12 +12,55 @@ mun_char <- read_dta("D:/Documents/GitHub/Thesis/Data/CEDE/PANEL_CARACTERISTICAS
 
 ## Set colnames, clean data without location, set col types --------------
 colnames(pol_vio) <- c("date", "location", "respon", "type", "victims", "report", "actions")
-pol_vio <- pol_vio %>% select(-actions) %>% filter(location != "")
+pol_vio <- pol_vio %>% select(-actions) %>% filter(location != "") %>% distinct()
 
 pol_vio$date <- as.Date(pol_vio$date)
 
 ## Expand multi value cells --------------
-pol_vio_try <- split_multicell(pol_vio, c("type", "victims"), ",")
+pol_vio$non_match_comma <- NA
+
+# Add identifyer
+pol_vio$id <- 1:dim(pol_vio)[1]
+
+# Delete commas from category
+pol_vio$type <- str_replace_all(pol_vio$type, "MUERTO POR OBJETIVOS, MÉTODOS Y MEDIOS ILÍCITOS", 
+                                replacement = "MUERTO POR OBJETIVOS MÉTODOS Y MEDIOS ILÍCITOS")
+
+
+# Keep order of type, victims. Do not add more variables to split. 
+pol_vio_try <- split_multicell(pol_vio, c("type", "victims"), ", ")
+
+dim(pol_vio_try) # 10649
+# Most duplicated rows have general names of victims: "N N", Integrantes comunidad...
+#View(pol_vio_try[duplicated(pol_vio_try),] %>% filter(!(victims %in% c("N N", "N.N. N", "NNN N"))))
+
+# Save un splited cases in excel and manually change them 
+
+#pol_vio_mult <- pol_vio_try %>% filter(non_match_comma ==  1) %>% split_multicell(c("victims"), ", ")
+#write_xlsx(pol_vio_mult, path = "D:/Documents/GitHub/Thesis/Data/manual_data/SiVel.xlsx")
+pol_vio_mult <- read_excel("D:/Documents/GitHub/Thesis/Data/manual_data/SiVel_man.xlsx") %>% 
+  split_multicell(c("type"), ", ")
+
+# Replace and further split type variable
+pol_vio_try <- pol_vio_try %>% filter(non_match_comma ==  0 | is.na(non_match_comma)) %>% 
+  rbind(pol_vio_mult)
+
+dim(pol_vio_try)# must be > 10649
+
+pol_vio_try <- pol_vio_try %>% mutate(type = 
+                                        case_when(type == "B:2:46 ATENTADO," ~ "B:2:46 ATENTADO", 
+                                                  T ~ type))  
+
+pol_vio_try <- pol_vio_try %>% split_multicell(c("type"), ", ")
+
+pol_vio_try <- pol_vio_try %>% mutate(mult_vict = str_detect(victims, ","), 
+                                      mult_type = str_detect(type, ","))
+dim(pol_vio_try) #11666
+#pol_vio_try$victims[pol_vio_try$mult_vict]
+#pol_vio_try$type[pol_vio_try$mult_type]
+
+pol_vio_try <- pol_vio_try %>% select(-c(mult_vict,mult_type))
+
 pol_vio <- pol_vio_try
 
 ## Get municipality and department -----------------
@@ -37,51 +80,59 @@ pol_vio_c <- pol_vio %>%
 pol_vio <- pol_vio_c
 
 ## Create violence type variables -------------------
-pol_vio$type %>% unique()
-othe_vio_collective <- c("colectivo lesionado|hambre como metodo de guerra|confinamiento colectivo|ataque indiscriminado|colectivo escudo")
-other_ind_viol <- c("lesion a persona protegida|lesion fisica|lesion por objetivos|detencion arbitraria|bienes civiles|rapto|tortura")
+#pol_vio$type %>% table() %>% sort(decreasing = T) %>% View()
+pol_vio <- pol_vio %>% mutate(type = case_when(
+  str_detect(type, "homicidio intencional de persona protegida") ~ "homicidio intencional de persona protegida",
+  str_detect(type, "ejecucion extrajudicial") ~ "ejecucion extrajudicial",
+  str_detect(type, "desplazamiento forzado") ~ "desplazamiento forzado", 
+  str_detect(type, "colectivo amenazado") ~ "colectivo amenazado",
+  str_detect(type, "confinamiento colectivo") ~ "confinamiento colectivo",
+  str_detect(type, "lesion fisica") ~ "lesion fisica", 
+  str_detect(type, "colectivo escudo") ~ "colectivo escudo",
+  str_detect(type, "zonas humanitarias") ~ "zonas humanitarias",
+  str_detect(type, "bienes civiles") ~ "bienes civiles",
+  str_detect(type, "hambre como metodo de guerra") ~ "hambre como metodo de guerra",
+  str_detect(type, "ataque indiscriminado") ~ "ataque indiscriminado",
+  str_detect(type, "empleo ilicito de armas de uso restringido") ~ "empleo ilicito de armas de uso restringido",
+  str_detect(type, "pillaje") ~ "pillaje",
+  str_detect(type, "lesion a persona protegida") ~ "lesion a persona protegida",
+  str_detect(type, "muerto por objetivos metodos y medios ilicitos") ~ "muerto por objetivos metodos y medios ilicitos",
+  str_detect(type, "metodos y medios ilicitos") ~ "muerto por objetivos metodos y medios ilicitos",
+  str_detect(type, "lesion por objetivos") ~ "lesion por objetivos",
+  str_detect(type, "detencion arbitraria") ~ "detencion arbitraria",
+  str_detect(type, "colectivo desplazado") ~ "colectivo desplazado",
+  str_detect(type, "colectivo lesionado") ~ "colectivo lesionado",
+  str_detect(type, "amenaza") ~ "amenaza",
+  str_detect(type, "asesinato") ~ "asesinato", 
+  str_detect(type, "secuestro") ~ "secuestro", 
+  str_detect(type, "violencia sexual") ~ "violencia sexual", 
+  str_detect(type, "violacion") ~ "violencia sexual", 
+  str_detect(type, "abuso sexual") ~ "violencia sexual", 
+  str_detect(type, "atentado") ~ "atentado", 
+  str_detect(type, "tortura") ~ "tortura", 
+  str_detect(type, "rapto") ~ "rapto",
+  
+  T ~ type
+))
+
+#pol_vio$type %>% table() %>% sort(decreasing = T) 
+
+other_ind_viol <- c("lesion a persona protegida|lesion fisica|lesion por objetivos|detencion arbitraria|bienes civiles|rapto|tortura|violencia sexual")
+coll_vio <- c("colectivo lesionado|hambre como metodo de guerra|ataque indiscriminado|colectivo escudo|colectivo desplazado|desplazamiento forzado|confinamiento colectivo|")
+#Get victims indivators. Do not mix individual with collective outcomes.
 pol_vio <- pol_vio %>% mutate(year = year(date), 
                                     month = month(date), 
                                     day = day(date),
-                                    lid_asis = as.integer(str_detect(type, "asesinato|ejecucion extrajudicial|homicidio")), 
-                                    threat = as.integer(str_detect(type, "amenazado|amenaza")),
+                                    asis = as.integer(str_detect(type, "asesinato|ejecucion extrajudicial|homicidio")),
+                                    fail_asis = as.integer(str_detect(type, "atentado")),
+                                    non_leth_vio = as.integer(str_detect(type, other_ind_viol)),
+                                    ind_threat = as.integer(str_detect(type, "amenaza")),
                                     collective_threat = as.integer(str_detect(type, "colectivo amenazado")),
-                                    individual_threat = as.integer(str_detect(type, "amenaza")),
-                                    collective_violence = as.integer(str_detect(type, "colectivo")), 
-                                    displacement = as.integer(str_detect(type, "desplazamiento")), 
-                                    failed_asis = as.integer(str_detect(type, "atentado")), 
-                                    other_collective = as.integer(str_detect(type,othe_vio_collective)),
-                                    other_ind = as.integer(str_detect(type,other_ind_viol)), 
-                                    other_vio = as.integer(str_detect(type,paste0(other_ind_viol,othe_vio_collective, collapse = "|")))
+                                    collective_violence = as.integer(str_detect(type, coll_vio)), 
+                                    displacement = as.integer(str_detect(type, "desplazamiento forzado|colectivo desplazado"))
                                     )
 
-## Association case variables. Imperfect measurement of responsible.
-pol_vio <- pol_vio %>% mutate(report = report %>% str_replace_all("[\r\n]", "")) %>% 
-  mutate(report =  report %>%  str_replace_all("\u0093", ""))
-
-unique(pol_vio$respon)
-sample(pol_vio$report, 3)
-# Using Osorio classification
-insuregency <- c("eln|epl|disidencia|farc|grupos postacuerdo de paz|guerrilla|farc-ep|ejercito de liberacion nacional|guerrilla|comandos ernesto rojas")
-paramilitary <- c("paramilitares|aguc|auc|milicias|autodefensas|ejercito revolucionario popular antisubversivo|antisubversivo|anti-comunista|libertadores de vichada|grupos de intolerancia")
-criminal_bands <- c("bandas criminales|alianzas criminales|bacrim|urabenos|rastrojos|aguilas negras|los paisas|oficina de envigado|los 400")
-# Differentiate based on Avila (2019)
-aguilas_negras <- c("aguilas negras")
-gov <- c("fuerza publica|ejercito|fuerza aerea|policia|ejercito|estado colombiano|ejercito|agentes estado")
-
-pol_vio <- pol_vio %>% mutate(
-  insurgent_respon = as.integer(str_detect(respon, insuregency) | str_detect(report, insuregency)),
-  param_respon = as.integer(str_detect(respon, paramilitary) | str_detect(report, paramilitary)), 
-  bacrim_respon = as.integer(str_detect(respon, criminal_bands) | str_detect(report, criminal_bands)), 
-  gov_respon =as.integer(str_detect(respon, gov) | str_detect(report, gov)), 
-  an_respon = as.integer(str_detect(respon, aguilas_negras) | str_detect(report, aguilas_negras))
-)
-
-# Delete farc respon after 2016. Differentiate with demobilized farc victims. 
-pol_vio <- pol_vio %>% mutate(insurgent_respon = case_when(
-  str_detect(report, "farc-ep") & !str_detect(report, "disidencia") & year >= 2016 ~ 0,
-  T ~ insurgent_respon
-))
+#colSums(pol_vio %>% select(asis:displacement))
 
 ## Municipality clean and code
 pol_vio <- pol_vio %>% mutate(mun = stri_trans_general(mun, id = "Latin-ASCII") %>% 
@@ -125,7 +176,6 @@ for(i in 1:length(unique(pol_vio$cod))) {
     dist_mult <- rbind(dist_mult, c(paste(x, collapse = "-----"), unique(pol_vio$cod)[i]))
   }
 }
-View(dist_mult)
 mult_to_un <- matrix(c("mercaderescauca", "mercaderes,cauca/mercaderescauca", "puracecauca", "purace,huila/pitalitocauca"), ncol = 2, byrow = T) %>% as.data.frame()
 colnames(dist_unique) <- c("cod_vic_inv", "cod_lid")
 colnames(mult_to_un) <- c("cod_vic_inv", "cod_lid")
@@ -148,6 +198,9 @@ pol_vio <- pol_vio %>%
 
 ## Type of victims ---------------------------------
 
+pol_vio <- pol_vio %>% mutate(report = report %>% str_replace_all("[\r\n]", "")) %>% 
+  mutate(report =  report %>%  str_replace_all("\u0093", "") %>% str_replace_all("\\\\", ""))
+
 pol_vio <- pol_vio %>% mutate(report = report %>% str_replace_all("[\r\n]", "") %>% tolower())
 
 pol_vio <- pol_vio %>% select(-c(cod_vic_inv, cod))
@@ -157,41 +210,52 @@ partidos_izq <- c("UNION PATRIOTICA|ALIANZA NACIONAL POPULAR|ANAPO|MOVIMIENTO AU
 MOVIMIENTO INDEPENDIENTE FRENTE DE ESPERANZA FE|MOVIMIENTO OBRERO INDEPENDIENTE REVOLUCIONARIO|MOIR|
 MOVIMIENTO ALTERNATIVA DEMOCRATICA|MOVIMIENTO 19 DE ABRIL|PARTIDO UNIDAD DEMOCRATICA|MOVIMIENTO FRENTE SOCIAL Y POLITICO|
 MOVIMIENTO AUTORIDADES INDIGENAS DE COLOMBIA|AICO|PARTIDO POLO DEMOCRATICO INDEPENDIENTE|POLO DEMOCRATICO ALTERNATIVO|MOVIMIENTO VAMOS IPIALES|
-colombia humana|alianza social independiente|partido comunista colombiano|pacto historico") %>% tolower() %>% str_replace("\n", "")
-comunal_sector <- c("lider comunitario|comunitaria|junta de accion comunal|JAC|consejo comunitario|lideresa comunitaria|defensora de derechos humanos|defensor de derechos humanos|lider comunal|lider civico|lider social")
-indig_sector <- c("indigena|igena|minga|minguero|cabildo|resguardo|lidere(s) indigena(s)")
-campesino_sector <- c("campesino|reclamante|lider(es) campesino(s)|anuc")
-politics_sector <- c("candidata|candidato|electo|electa")
+colombia humana|alianza social independiente|partido comunista colombiano|pacto historico") %>% tolower() 
+partidos_izq <- gsub("[\r\n]", "", partidos_izq)
 
+lider_sector <- c("lider comunitario|comunitaria|junta de accion comunal|JAC|consejo comunitario|lideresa comunitaria|defensor(a) de derechos humanos|defensor de derechos humanos|lider comunal|lider civico|lider social|lideresa")
+indig_sector <- c("indigena|igena|minga|minguero|cabildo|resguardo|lidere(s) indigena(s)|embera")
+campesino_sector <- c("campesino|reclamante|lider(es) campesino(s)|anuc")
+politics_sector <- c("candidata|candidato|concejal|alcalde")
+
+#sample(pol_vio$report, 3)
 
 pol_vio <- pol_vio %>% mutate(
-  comunal_sector = as.integer(str_detect(report, comunal_sector)), 
-  lgbt_sector = as.integer(str_detect(report, "lgtb|lgbt")), 
+  lider_sector = as.integer(str_detect(report, lider_sector)), 
   campesino_sector = as.integer(str_detect(report, campesino_sector)),
   indig_sector = as.integer(str_detect(report, indig_sector)), 
   afro_sector = as.integer(str_detect(report, "afrodescen|negritud|palenque")), 
   sindical_sector = as.integer(str_detect(report, "sindic|obrer|sindicato")), 
-  ambiental_sector = as.integer(str_detect(report, "ambiental|sostenible|minrero|mineria|consevacion|medio ambient|ecolog")), 
-  displaced_sector = as.integer(str_detect(report, "desplazad")), 
+  ambiental_sector = as.integer(str_detect(report, "ambiental|sostenible|minrero|mineria|consevacion ambiental|medio ambient|ecolog")), 
   pnis_sector = as.integer(str_detect(report, "pnis|sustitucion de cultivos")), 
   izq_sector = as.integer(str_detect(report, partidos_izq)), 
-  mujer_secor = as.integer(str_detect(report, "feminismo|feminista")),
   ex_FARC = as.integer((str_detect(report, "excombatiente") & str_detect(report, "farc-ep")) | 
                          str_detect(report, "firmante|ex-farc|demovilizado")), 
   politics_sector =  as.integer(str_detect(report, politics_sector))
 )
 
-
 ## Create RD dataset. 
 
-pol_vio <- pol_vio %>% mutate(vio = 1)
-sum_cols <- colnames(pol_vio)[-c(1:11, 27)]
+pol_vio <- pol_vio %>% mutate(vio = 1, 
+                              lid_asis = lider_sector*asis, 
+                              lid_fail_asis = lider_sector*fail_asis, 
+                              lid_threat = lider_sector*ind_threat,
+                              lid_nl_vio = lider_sector*non_leth_vio,
+                              )
+
+#colSums(pol_vio %>% select(lider_sector:lid_nl_vio))
+
+sum_cols <- colnames(pol_vio)[-c(1:13, 21, 22, 23)]
 pol_vio$year <- as.character(pol_vio$year)
 pol_vio_RD <- summarize_data_count(pol_vio, sum_cols, sum_cols)
 
+write.csv(pol_vio_RD, "D:/Documents/GitHub/Thesis/Data/Final_data/pol_vio_SIVel_RD.csv")
 
 ## Create dataset for DiD setting. 
 
 
+## Graphs
+
 rm(pol_vio_try, pol_vio_c,mult_to_un, dist, dist_mult, dist_unique, sum_cols)
-View(pol_vio_day)
+g1 <- pol_vio_RD %>% group_by(year) %>% summarise(lid = sum(lid_asis, na.rm = T)) %>% ungroup()
+ggplot(data = g1) + geom_line(aes(x = year ,y = lid, group = 1))
