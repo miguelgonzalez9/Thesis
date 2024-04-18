@@ -22,12 +22,12 @@ rnames <- c("Killing", "Threat", "Failed killing", "Insurgent Violent Act",
             "Belic Action")
 # Lead 1
 r_res_1 <- reg_tab(out_vars = paste0("lead1_",pop_conflict_vars), controls_list = controls_list, 
-                 running_var = X_it, subset_logic = RD_baseline$year == 2019, 
-                digits = 5, out_vars_names = rnames)
+                   running_var = X_it, subset_logic = RD_baseline$year == 2019, 
+                   digits = 5, out_vars_names = rnames)
 # Lead 2
 r_res_2 <- reg_tab(out_vars = paste0("lead2_",pop_conflict_vars), controls_list = controls_list, 
-                 running_var = X_it, subset_logic = RD_baseline$year == 2019, 
-                 digits = 5, out_vars_names = rnames)
+                   running_var = X_it, subset_logic = RD_baseline$year == 2019, 
+                   digits = 5, out_vars_names = rnames)
 # Lead 3
 r_res_3 <- reg_tab(out_vars = paste0("lead3_",pop_conflict_vars), controls_list = controls_list, 
                    running_var = X_it, subset_logic = RD_baseline$year == 2019, 
@@ -41,40 +41,40 @@ r_res_4 <- reg_tab(out_vars = paste0("lead4_",pop_conflict_vars), controls_list 
 
 # Lead 1 + Lead 2
 r_res_12 <- reg_tab(out_vars = paste0("lead12_",conflict_vars_rd), controls_list = controls_list, 
-                   running_var = X_it, subset_logic = RD_baseline$year == 2019, 
-                   digits = 5, out_vars_names = rnames)
+                    running_var = X_it, subset_logic = RD_baseline$year == 2019, 
+                    digits = 5, out_vars_names = rnames)
 
 # Lead 1 + Lead 2 + Lead 3
 r_res_123 <- reg_tab(out_vars = paste0("lead123_",conflict_vars_rd), controls_list = controls_list, 
-                    running_var = X_it, subset_logic = RD_baseline$year == 2019, 
-                    digits = 5, out_vars_names = rnames)
-# Lead 1 + Lead 2 + Lead 3 + Lead 4
-r_res_1234 <- reg_tab(out_vars = paste0("pop_lead1234_",conflict_vars_rd), controls_list = controls_list, 
                      running_var = X_it, subset_logic = RD_baseline$year == 2019, 
                      digits = 5, out_vars_names = rnames)
+# Lead 1 + Lead 2 + Lead 3 + Lead 4
+r_res_1234 <- reg_tab(out_vars = paste0("pop_lead1234_",conflict_vars_rd), controls_list = controls_list, 
+                      running_var = X_it, subset_logic = RD_baseline$year == 2019, 
+                      digits = 5, out_vars_names = rnames)
 
 ## 1.2 Spending variables.
 rnames <- c("Spending on Armed Conflict Victims (log)", "Spending on Armed Conflict Victims' Security (log)", 
             "Spending on Armed Conflict Victims' Security (% change)", "Spending on Armed Conflict Victims (% change)")
 r_res_spend_1 <- reg_tab(out_vars =lead1_spending_vars, controls_list = controls_list, 
-                        running_var = X_it, subset_logic = RD_baseline$year == 2019, 
-                        digits = 5, out_vars_names = rnames)
+                         running_var = X_it, subset_logic = RD_baseline$year == 2019, 
+                         digits = 5, out_vars_names = rnames)
 
 r_res_spend_1_2015 <- reg_tab(out_vars =lead1_spending_vars, controls_list = controls_list, 
-                         running_var = X_it, subset_logic = RD_baseline$year == 2015, 
-                         digits = 5, out_vars_names = rnames)
+                              running_var = X_it, subset_logic = RD_baseline$year == 2015, 
+                              digits = 5, out_vars_names = rnames)
 
 r_res_spend_2_2015 <- reg_tab(out_vars =lead2_spending_vars, controls_list = controls_list, 
                               running_var = X_it, subset_logic = RD_baseline$year == 2015, 
                               digits = 5, out_vars_names = rnames)
 
 r_res_spend_1_all <- reg_tab(out_vars =lead1_spending_vars, controls_list = controls_list, 
-                              running_var = X_it, subset_logic = RD_baseline$year %in% c(2015, 2019), 
-                              digits = 5, out_vars_names = rnames)
+                             running_var = X_it, subset_logic = RD_baseline$year %in% c(2015, 2019), 
+                             digits = 5, out_vars_names = rnames)
 
 # Table 1a. Non-paremetric estimates. Violence leads1-4 and spending lead1 2019. 
 rnames <- c(c("Overall spending (log-scale)", "Security spending (log-scale)", 
-            "Security spending (% change)", "Overall spending (% change)"), 
+              "Security spending (% change)", "Overall spending (% change)"), 
             c("Killing", "Threat", "Failed killing", "Insurgent", 
               "Criminal Band", "State Forces", 
               "Community Leader", "Violent Act", "Leader killing (SD)", 
@@ -87,13 +87,13 @@ rnames_1[2*out_num - 1] <- rnames
 
 
 table_1 <- reg_tab(out_vars =c(lead1_spending_vars,paste0("pop_lead1234_",conflict_vars_rd)), controls_list = controls_list, 
-                                    running_var = X_it, subset_logic = RD_baseline$year == 2019, 
-                                    digits = 5, out_vars_names = rnames)
+                   running_var = X_it, subset_logic = RD_baseline$year == 2019, 
+                   digits = 5, out_vars_names = rnames)
 
 
 tab_1 <- kbl(table_1, booktabs = T, align = "c", format = "latex",longtable = T, 
-    caption = "Effect of right-wing mayor election violence and spending on victim's compensation") %>% 
-add_header_above(c("","Linear Polynomial" = 4, "Quadratic Polynomial" = 4, "")) %>% 
+             caption = "Effect of right-wing mayor election violence and spending on victim's compensation") %>% 
+  add_header_above(c("","Linear Polynomial" = 4, "Quadratic Polynomial" = 4, "")) %>% 
   add_header_above(c("Panel A. Non-parametric Estiamtes" = 10)) %>% 
   kable_styling(latex_options = c("hold_position"),
                 position = "center") %>% 
@@ -161,11 +161,11 @@ l_res_1234 <- reg_tab(out_vars = paste0("pop_lead1234_",conflict_vars_rd), contr
 # and results from Fergusson et al. 
 # When 
 l_res_1234_2015 <- reg_tab(out_vars = paste0("pop_lead1234_",conflict_vars_rd), controls_list = controls_list, 
-                      running_var = X_it, subset_logic = RD_baseline$year == 2015, 
-                      digits = 5, out_vars_names = rnames)
-l_res_12_2015 <- reg_tab(out_vars = paste0("pop_lead12_",conflict_vars_rd), controls_list = controls_list, 
                            running_var = X_it, subset_logic = RD_baseline$year == 2015, 
                            digits = 5, out_vars_names = rnames)
+l_res_12_2015 <- reg_tab(out_vars = paste0("pop_lead12_",conflict_vars_rd), controls_list = controls_list, 
+                         running_var = X_it, subset_logic = RD_baseline$year == 2015, 
+                         digits = 5, out_vars_names = rnames)
 
 
 ## 1.2 Spending variables.
@@ -216,4 +216,3 @@ tab_2 <- kbl(table_2, booktabs = T, align = "c", format = "latex",longtable = T,
   )
 
 writeLines(tab_2, "D:/Documents/GitHub/Thesis/Tables_tex/table2A.tex")
-
