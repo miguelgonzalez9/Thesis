@@ -45,7 +45,7 @@ pol_vio_mult <- read_excel("D:/Documents/GitHub/Thesis/Data/manual_data/SiVel_ma
 pol_vio_try <- pol_vio_try %>% filter(non_match_comma ==  0 | is.na(non_match_comma)) %>% 
   rbind(pol_vio_mult)
 
-dim(pol_vio_try)# must be > 10649
+dim(pol_vio_try)# must be > 10649. 11368
 
 pol_vio_try <- pol_vio_try %>% mutate(type = 
                                         case_when(type == "B:2:46 ATENTADO," ~ "B:2:46 ATENTADO", 
@@ -57,7 +57,7 @@ pol_vio_try <- pol_vio_try %>% mutate(mult_vict = str_detect(victims, ","),
                                       mult_type = str_detect(type, ","))
 dim(pol_vio_try) #11666
 #pol_vio_try$victims[pol_vio_try$mult_vict]
-#pol_vio_try$type[pol_vio_try$mult_type]
+#pol_vio_try$type[pol_vio_try$mult_type] # char(0)
 
 pol_vio_try <- pol_vio_try %>% select(-c(mult_vict,mult_type))
 
@@ -241,21 +241,21 @@ pol_vio <- pol_vio %>% mutate(vio = 1,
                               lid_fail_asis = lider_sector*fail_asis, 
                               lid_threat = lider_sector*ind_threat,
                               lid_nl_vio = lider_sector*non_leth_vio,
+                              # Add new variables at the end
                               )
 
-#colSums(pol_vio %>% select(lider_sector:lid_nl_vio))
+#colSums(pol_vio %>% select(where(is.numeric)))
 
-sum_cols <- colnames(pol_vio)[-c(1:13, 21, 22, 23)]
+sum_cols <- colnames(pol_vio)[-c(1:13, 21)]
 pol_vio$year <- as.character(pol_vio$year)
 pol_vio_RD <- summarize_data_count(pol_vio, sum_cols, sum_cols)
 
 write.csv(pol_vio_RD, "D:/Documents/GitHub/Thesis/Data/Final_data/pol_vio_SIVel_RD.csv")
 
-## Create dataset for DiD setting. 
 
 
 ## Graphs
 
 rm(pol_vio_try, pol_vio_c,mult_to_un, dist, dist_mult, dist_unique, sum_cols)
-g1 <- pol_vio_RD %>% group_by(year) %>% summarise(lid = sum(lid_asis, na.rm = T)) %>% ungroup()
+g1 <- pol_vio_RD %>% group_by(year) %>% summarise(lid = sum(lider_sector, na.rm = T)) %>% ungroup()
 ggplot(data = g1) + geom_line(aes(x = year ,y = lid, group = 1))

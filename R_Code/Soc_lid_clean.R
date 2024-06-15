@@ -33,7 +33,6 @@ lideres["respon"][lideres["respon"] == "paramilitare s"] <- "paramilitary"
 lideres["respon"][lideres["respon"] == "policia"] <- "policia nacional"
 lideres["respon"][lideres["respon"] == "disidencia"] <- "disidencias"
 lideres["respon"][lideres["respon"] == "desconocido"] <- "unknown"
-lideres["respon"][lideres["respon"] == "omar marrugo villadiego - excompanero sentimental"] <- "remove"
 lideres["respon"][lideres["respon"] == ""] <- NA
 lideres["social_sector"][lideres["social_sector"] == ""] <- NA
 lideres["organization_cacep"][lideres["organization_cacep"] == ""] <- NA
@@ -174,48 +173,50 @@ lideres_sd <- lideres_sd %>% mutate(type = case_when(
 
 # Keep order of type, victims. Do not add more variables to split. 
 lideres_sd$non_match_comma <- NA
+dim(lideres_sd) #1423
 lideres_sd <- split_multicell(lideres_sd, c("victims", "type"), ", ")
+# 1581
 
 # Manually code non-matching observations
 mlt_lid <- lideres_sd %>% filter(non_match_comma == 1) %>%  split_multicell(c("victims"), ", ")
-t <- c("A:1:10 EJECUCIÃ"N EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA", 
+t <- c("A:1:10 EJECUCIÃN EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA", 
        "A:1:16 ATENTADO", 
        
-       "A:1:10 EJECUCIÃ"N EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
-       "A:1:10 EJECUCIÃ"N EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
-       "A:1:10 EJECUCIÃ"N EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
+       "A:1:10 EJECUCION EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
+       "A:1:10 EJECUCION EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
+       "A:1:10 EJECUCION EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
        
-       "A:1:10 EJECUCIÃ"N EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
-       "A:1:10 EJECUCIÃ"N EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
+       "A:1:10 EJECUCION EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
+       "A:1:10 EJECUCION EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
        
-       "A:1:10 EJECUCIÃ"N EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA", 
+       "A:1:10 EJECUCION EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA", 
        "A:1:16 ATENTADO", 
        
-       "A:1:13 LESIÃ"N FÃSICA, D:4:702 LESIÃ"N A PERSONA PROTEGIDA", 
-       "A:1:10 EJECUCIÃ"N EXTRAJUDICIAL,  HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
+       "A:1:13 LESIÃN FÃSICA, D:4:702 LESIÃN A PERSONA PROTEGIDA", 
+       "A:1:10 EJECUCIÃN EXTRAJUDICIAL,  HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
        
-       "A:1:10 EJECUCIÃ"N EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
-       "A:1:10 EJECUCIÃ"N EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
-       "A:1:10 EJECUCIÃ"N EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
-       "A:1:10 EJECUCIÃ"N EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
+       "A:1:10 EJECUCION EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
+       "A:1:10 EJECUCION EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
+       "A:1:10 EJECUCION EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
+       "A:1:10 EJECUCION EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
        
-       "A:1:10 EJECUCIÃ"N EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
-       " A:1:13 LESIÃ"N FÃSICA, D:4:702 LESIÃ"N A PERSONA PROTEGIDA", 
+       "A:1:10 EJECUCION EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
+       " A:1:13 LESION FÃSICA, D:4:702 LESION A PERSONA PROTEGIDA", 
        
-       "A:1:10 EJECUCIÃ"N EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
-       "A:1:10 EJECUCIÃ"N EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
+       "A:1:10 EJECUCION EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
+       "A:1:10 EJECUCION EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
        
-       "A:1:10 EJECUCIÃ"N EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
-       " A:1:13 LESIÃ"N FÃSICA, D:4:702 LESIÃ"N A PERSONA PROTEGIDA",
+       "A:1:10 EJECUCION EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
+       " A:1:13 LESION FÃSICA, D:4:702 LESION A PERSONA PROTEGIDA",
        
-       "A:1:10 EJECUCIÃ"N EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
-       "A:1:10 EJECUCIÃ"N EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
-       "A:1:10 EJECUCIÃ"N EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
-       "A:1:10 EJECUCIÃ"N EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
-       "A:1:10 EJECUCIÃ"N EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
-       "A:1:10 EJECUCIÃ"N EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
-       "A:1:10 EJECUCIÃ"N EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
-       "A:1:10 EJECUCIÃ"N EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA")
+       "A:1:10 EJECUCION EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
+       "A:1:10 EJECUCION EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
+       "A:1:10 EJECUCION EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
+       "A:1:10 EJECUCION EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
+       "A:1:10 EJECUCION EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
+       "A:1:10 EJECUCION EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
+       "A:1:10 EJECUCION EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA",
+       "A:1:10 EJECUCION EXTRAJUDICIAL, D:4:701 HOMICIDIO INTENCIONAL DE PERSONA PROTEGIDA")
 if(length(t) == dim(mlt_lid)[1]){
   mlt_lid$type <- t
 } else {
@@ -265,7 +266,6 @@ lideres_sd <- lideres_sd %>% mutate(year = year(date),
 ## Clean respon variable--------------------------------
 #View(lideres_sd %>% filter(respon %in% c("sin informacion, otros, disidencia farc")))
 #lideres_sd %>% filter(id %in% c("130328"))
-
 
 lideres_sd["respon"][lideres_sd["victims"] == "hernan emilio  quitumbo"] <- "farc"
 lideres_sd["respon"][lideres_sd["victims"] == "fabio  zapata"] <- "farc"
@@ -442,8 +442,8 @@ lideres_sd <- lideres_sd %>% mutate(type = case_when(
   
   T ~ type
 ))
-lideres_sd$type %>% table() %>% sort(decreasing = T)
-
+#lideres_sd$type %>% table() %>% sort(decreasing = T)
+# Asesinato 1025      
 # Filter killings only
 lideres_sd <- lideres_sd %>% 
   filter(type %in% c("asesinato", "ejecucion extrajudicial", "homicidio intencional de persona protegida", 
@@ -481,21 +481,25 @@ lideres_INDEPAZ_month <- lideres %>% group_by(year, month) %>% summarise(
 fg_1 <- ggplot(lideres_INDEPAZ_month, aes(x = date, y =lid)) + geom_line() + 
   theme_bw() + ylab("Leader Killings") + xlab("Year") + scale_colour_grey() 
 
-ggsave(filename = "Figure1.pdf", plot = fg_1, device = "pdf",
+ggsave(filename = "Figure1A.pdf", plot = fg_1, device = "pdf",
        path = "D:/Documents/GitHub/Thesis/Figures", 
        width = 8, height = 6, units = "in")
 
 # RD datasets -------------------------
 ## Indepaz
-colnames(lideres)[-c(1:13, 15, 21, 22)][-1] <- paste0("lid_",colnames(lideres)[-c(1:13, 15, 21, 22)][-1])
-sum_cols <- colnames(lideres)[-c(1:13, 15, 22, 21)]
+
+
+colnames(lideres)[str_detect(colnames(lideres), "(?<!social)_sector$|_respon$")] <- paste0("lid_", colnames(lideres)[str_detect(colnames(lideres), "(?<!social)_sector$|_respon$")])
+sum_cols <- colnames(lideres)[str_detect(colnames(lideres), "(?<!social)_sector$|_respon$|lid_assas")]
 lideres_RD <- summarize_data_count(lideres, sum_cols, sum_cols)
 sum_cols_sd <- colnames(lideres_sd)[-c(1:17, 24)]
 lideres_RD_sd <- summarize_data_count(lideres_sd,sum_cols_sd,paste0(sum_cols_sd, "_sd"))
 lideres_RD <- full_join(lideres_RD, lideres_RD_sd) %>% complete(year, codmpio) %>% 
   mutate(across(!year & !codmpio, ~ replace_na(.x, 0)))
-lideres_RD <- lideres_RD %>% select(-c(lid_sindical_sector, lid_ambiental_sector, lid_victimas_sector, 
-                                       bacrim_respon_sd, indiv_respon_sd, izq_sector_sd))
+lideres_RD <- lideres_RD %>% select(-c(bacrim_respon_sd, indiv_respon_sd, izq_sector_sd))
 #colSums(lideres_RD %>% select(-c(year, codmpio)))
+# Key variables lid_assas and killing_sd. Look at 
+#: comunal_sector_sd,  lid_comunal_sector, indig_sector_sd lid_indigenas_sector, 
+#lid_campesino_sector campesino_sector_sd. 
 
 write.csv(lideres_RD, "D:/Documents/GitHub/Thesis/Data/Final_data/leaders_RD.csv")

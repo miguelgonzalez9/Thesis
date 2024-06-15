@@ -116,7 +116,7 @@ clean_string <- function(x){
   y <- x %>% str_c(collapse = "---") %>% 
     str_replace_all(c("Ãº" = "u","Ã©" = "e","Ã¼" = "u", "Ã???" = "e", 
                       "Ã¡" = "a", "Ã³" = "o", "\u0081" = "", "\u008d" = "",
-                      "Ã±" = "n","Ã"" = "o",  "Ã" = "i", "\t" = "")) %>% 
+                      "Ã±" = "n","Ã" = "o",  "Ã" = "i", "\t" = "")) %>% 
     strsplit(split = "---") %>% unlist() %>% tolower()
   return(y)
 }
@@ -165,7 +165,6 @@ summarize_data_count_2 <- function(df, cols, new_names){
     print(temp)
     df_new <- df_new %>% full_join(temp, by = c("year", "codmpio", "month", "day"))
   }
-  df_new <- df_new %>% mutate(across(lid_asis:vio, ~ replace_na(.x, 0)))
   
   return(df_new)
   
@@ -242,7 +241,7 @@ left_join_rep <- function(df1, df2, by){
 }
 
 
-reg_tab <- function(out_vars, controls_list, subset_logic, running_var, digits, 
+reg_tab <- function(df,out_vars, controls_list, subset_logic, running_var, digits, 
                     out_vars_names, ...){
 
   col_num <- length(controls_list)*2 + 2
@@ -257,7 +256,7 @@ reg_tab <- function(out_vars, controls_list, subset_logic, running_var, digits,
     for (pol in c(1,2)){
       for (c in controls_list) {
         if (c[1] == "") {
-          mod <- rdrobust(RD_baseline[[out_v]], RD_baseline[[running_var]], p = pol, 
+          mod <- rdrobust(y = df[[out_v]], x = df[[running_var]], p = pol, 
                           all = T, subset = subset_logic, ...)
           beta <- round(mod$coef["Robust",], digits)
           se <- round(mod$se["Robust",], digits)
@@ -266,8 +265,8 @@ reg_tab <- function(out_vars, controls_list, subset_logic, running_var, digits,
           p_val <- mod$pv["Robust",]
         }
         else {
-          mod <- rdrobust(RD_baseline[[out_v]], RD_baseline[[running_var]], p = pol, 
-                          all = T, covs = RD_baseline[c], subset = subset_logic, ...)
+          mod <- rdrobust(df[[out_v]], df[[running_var]], p = pol, 
+                          all = T, covs = df[c], subset = subset_logic)
           beta <- round(mod$coef["Robust",], digits)
           se <- round(mod$se["Robust",], digits)
           bwd <- mod$bws[2,2]
@@ -363,5 +362,250 @@ reg_tab <- function(out_vars, controls_list, subset_logic, running_var, digits,
   return(right_results)
 }
 
+codmpio_clean <- function(df){
+  df$codmpio <- as.character(df$codmpio)
+  df <- df %>% 
+    mutate(codmpio = case_when(
+      str_count(codmpio) == 4 ~ paste0("0", codmpio), 
+      T ~ codmpio
+    ))
+}
+
+summary_table <- function(df1, cat_vars, cont_vars, count_vars, digits, rnames){
+  sum_table <- matrix(ncol = 6, nrow = 0) %>% data.frame()
+  colnames(sum_table) <- c("Dependent Variables", "Min", "Max", "Mean", "SD", "N")
+  # Categorical variables
+  
+  if(length(cont_vars) > 0){
+    for (i in cont_vars) {
+      m <- matrix(ncol = 6, nrow = 1, data = rep("-", 6)) %>% data.frame()
+      colnames(m) <-  c("Dependent Variables", "Min", "Max", "Mean", "SD", "N")
+      var <- df1[[i]]
+      m[1, 1] <- i
+      m[1, 2] <- round(min(var, na.rm = T), digits)
+      m[1, 3] <- round(max(var, na.rm = T), digits)
+      m[1, 4] <- round(mean(var, na.rm = T), digits)
+      m[1, 5] <- round(sd(var, na.rm = T), digits)
+      sum_table <- rbind(sum_table, m)
+      
+    }
+  }
+  
+  if(length(count_vars) > 0){
+    for (i in count_vars) {
+      m <- matrix(ncol = 6, nrow = 1, data = rep("-", 6)) %>% data.frame()
+      colnames(m) <-  c("Dependent Variables", "Min", "Max", "Mean", "SD", "N")
+      var_l <- df1[[i]] %>% unique() %>% length()
+      m[1, 1] <- i
+      m[1, 6] <- var_l
+      sum_table <- rbind(sum_table, m)
+    }
+  }
+  
+  if(length(cat_vars) > 0){
+    df_temp <- df1 %>% dummy_columns(cat_vars)
+    for (i in cat_vars) {
+      cats <- df_temp[[i]] %>% unique()
+      for (c in cats) {
+        m <- matrix(ncol = 6, nrow = 1, data = rep("-", 6)) %>% data.frame()
+        colnames(m) <-  c("Dependent Variables", "Min", "Max", "Mean", "SD", "N")
+        c_var <-paste0(i,"_", c)
+        count <- sum(df_temp[[c_var]] == 1, na.rm = T)
+        m[1, 1] <- c_var
+        m[1, 6] <- count
+        sum_table <- rbind(sum_table, m)
+      }
+    }
+  }
+  
+  sum_table[,1] <- rnames
+  return(sum_table)
+  
+}
+
+# Badiwdth robustness from half to double the badwidth. 
+bdwidth_rob <-  function(df,out_vars, controls, running_var, 
+                         out_vars_names, ...){
+  bwd_l <- list()
+  sel_b <- list()
+  beta_list <- list()
+  cil_list <- list()
+  cih_list <- list()
+  plot_list <- list()
+  i <- 1
+  for (out_v in out_vars) {
+    mod <- rdrobust(y = df[[out_v]], x = df[[running_var]], p = 2, 
+                    all = T, covs = df[controls])
+    bwd <- mod$bws[2,2]
+    bw_list <- seq(from = bwd/2, to = bwd*2, length.out = 10)
+    bwd_l[[i]] <- bw_list
+    sel_b[[i]] <- bwd
+    j <- 1
+    temp_b <- c()
+    temp_cil <- c()
+    temp_cih <- c()
+    for (b in bw_list) {
+      mod <- rdrobust(y = df[[out_v]], x = df[[running_var]], p = 2, 
+                      all = T, covs = df[controls],
+                      h = c(b,b))
+      temp_b[j] <- mod$coef["Robust",]
+      temp_cil[j] <- mod$ci["Robust","CI Lower"]
+      temp_cih[j] <- mod$ci["Robust","CI Upper"]
+      j <- j + 1
+    }
+    beta_list[[i]] <- temp_b
+    cil_list[[i]] <- temp_cil
+    cih_list[[i]] <- temp_cih
+    plot_list[[i]] <- coefplot(temp_b, ci_low = temp_cil, ci_high = temp_cih, x = bw_list)
+    i <- i +1
+  }
+  return(list(beta =beta_list,ci_low= cil_list,ci_high = cih_list, 
+              plots = plot_list, badwidth = bwd_l, select_bw = sel_b))
+}
 
 
+reg_tab_1 <- function(df,out_vars, controls_list, subset_logic, running_var, digits, 
+                    out_vars_names, ...){
+  col_num <- length(controls_list)*2 + 1
+  
+  right_results <- matrix(nrow = 4*length(out_vars), ncol = col_num)
+  right_results <- data.frame(right_results)
+  
+  i <- 1
+  for (out_v in out_vars) {
+    j <- 2
+    print(out_v)
+    for (pol in c(1,2)){
+      for (c in controls_list) {
+        if (c[1] == "") {
+          mod <- rdrobust(y = df[[out_v]], x = df[[running_var]], p = pol, 
+                          all = T, subset = subset_logic, ...)
+          beta <- round(mod$coef["Robust",], digits)
+          se <- round(mod$se["Robust",], digits)
+          bwd <- mod$bws[2,2]
+          obs <- sum(mod$N_h)
+          p_val <- mod$pv["Robust",]
+        }
+        else {
+          mod <- rdrobust(df[[out_v]], df[[running_var]], p = pol, 
+                          all = T, covs = df[c], subset = subset_logic)
+          beta <- round(mod$coef["Robust",], digits)
+          se <- round(mod$se["Robust",], digits)
+          bwd <- mod$bws[2,2]
+          obs <- sum(mod$N_h)
+          p_val <- mod$pv["Robust",]
+        }
+        
+        if (p_val < 0.01){
+          beta <- paste0(beta, "***")
+        } else if (p_val < 0.05){
+          beta <- paste0(beta, "**")
+        } else if (p_val < 0.1){
+          beta <- paste0(beta, "*")
+        }
+        
+        right_results[4*i - 3,j] <- beta
+        right_results[4*i -2 ,j] <- paste0("(", se, ")")
+        right_results[4*i - 1 ,j] <- obs
+        right_results[4*i ,j] <- round(bwd, digits)
+        j <- j + 1
+        
+      }
+      
+      
+    }
+    i <- i + 1
+  }
+  ## Add covariates rows
+  # First columns
+  
+  g <- c("")
+  s <- c("")
+  p <- c("")
+  inc <- c("")
+  controls <- c("")
+  j <- 2
+  col_n <-  c("Dependent Variable")
+  for (pol in c(1,2)){
+    for (i in 1:length(controls_list)){
+      p[j] <- pol
+      if(names(controls_list)[i] == "nc"){
+        g[j] <- "NO"
+        s[j] <- "NO"
+        inc[j] <- "NO"
+      }
+      
+      if(names(controls_list)[i] == "gc"){
+        g[j] <- "YES"
+        s[j] <- "NO"
+        inc[j] <- "NO"
+      }
+      
+      if(names(controls_list)[i] == "sc"){
+        g[j] <- "NO"
+        s[j] <- "YES"
+        inc[j] <- "NO"
+      }
+      
+      if(names(controls_list)[i] == "gsc"){
+        g[j] <- "YES"
+        s[j] <- "YES"
+        inc[j] <- "NO"
+      }
+      
+      if(names(controls_list)[i] == "gsci"){
+        g[j] <- "YES"
+        s[j] <- "YES"
+        inc[j] <- "YES"
+      }
+      col_n <- c(col_n, paste0("(", j-1 ,")"))
+      
+      j <- j + 1
+      
+    }
+  }
+  out_vars_names_1 <- out_vars_names
+  out_num <- 1:length(out_vars_names)
+  out_vars_names_1[4*out_num] <- "Bandwidth"
+  out_vars_names_1[4*out_num - 1] <- "N"
+  out_vars_names_1[4*out_num - 2] <- ""
+  out_vars_names_1[4*out_num - 3] <- out_vars_names
+  out_names <- c(out_vars_names_1, "Geo Controls", "Socioeconomic Controls", "Incumbency controls",
+                 "Polynomial")
+  right_results <- right_results %>% rbind(g,s,inc, p)
+  colnames(right_results) <- col_n
+  right_results[,1] <- out_names
+  return(right_results)
+}
+
+# Year heterogeneity. 
+year_het <-  function(df,out_vars, controls, running_var, 
+                         out_vars_names, ...){
+  beta_list <- list()
+  cil_list <- list()
+  cih_list <- list()
+  
+  years <- c("lead1", "lead2", "lead3", "lead4")
+  i <- 1
+  for (out_v in out_vars) {
+    temp_b <- c()
+    temp_cil <- c()
+    temp_cih <- c()
+    j <- 1
+    for (y in years) {
+      out_v_1 <- paste0(y, "_pop_", out_v)
+      mod <- rdrobust(y = df[[out_v_1]], x = df[[running_var]], p = 2, 
+                      all = T, covs = df[controls])
+      temp_b[j] <- mod$coef["Robust",]
+      temp_cil[j] <- mod$ci["Robust","CI Lower"]
+      temp_cih[j] <- mod$ci["Robust","CI Upper"]
+      j<- j + 1
+    }
+
+    beta_list[[i]] <- temp_b
+    cil_list[[i]] <- temp_cil
+    cih_list[[i]] <- temp_cih
+    i <- i +1
+  }
+  return(list(beta =beta_list,ci_low= cil_list,ci_high = cih_list))
+}

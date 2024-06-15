@@ -4,22 +4,29 @@
 
 # McCarry tests 
 ## Right Figure 1
-MC_test_1 <- rddensity(RD_baseline[RD_baseline$year == 2019,]$share_diff2_r, c = 0)
-est <- round(MC_test_1$test$t_jk, 4)
-se <- round(MC_test_1$test$p_jk,4) 
-h <- MC_test_1$h
+MC_test_1 <- rddensity(RD_baseline$share_diff2_r, c = 0)
+t <- MC_test_1$test$t_jk
+p <- MC_test_1$test$p_jk
 N <- MC_test_1$N
-Mc_plot_1 <- rdplotdensity(MC_test_1, RD_baseline[RD_baseline$year == 2019,]$share_diff2_r, plotGrid = "es", type = "both", 
-              lcol = 1, hist = F, CItype = "line")
+if (p < 0.01){
+  t <- paste0(t, "***")
+} else if (p < 0.05){
+  t <- paste0(t, "**")
+} else if (p < 0.1){
+  t <- paste0(t, "*")
+}
+Mc_plot_1 <- rdplotdensity(MC_test_1, RD_baseline$share_diff2_r, plotGrid = "es",
+                           type = "both", CItype = "line",
+                           lcol = 1, hist = T)
 Pl_1 <- Mc_plot_1$Estplot +  
   labs(
-       caption = paste0("Discontinuity estimate (estandard error) = ", est, " (", se, ").",
+       caption = paste0("Discontinuity estimate (p-value) = ", round(est,3), " (", round(p,3), ").",
                         "N = ",N, ".")) + 
   theme(plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
         plot.caption = element_text(size = 10, hjust = 0, margin = margin(t = 10)),
         axis.title.x = element_text(size = 12),  # Adjust size of x-axis label
         axis.title.y = element_text(size = 12)) +  # Adjust size of y-axis label)
-  xlab("Relative vote share for right wing candidate 2019") +
+  xlab("Relative vote share for right wing candidate") +
   ylab("Density")
 
 ggsave(filename = "McCarry_r.pdf", plot = Pl_1, device = "pdf",
@@ -50,39 +57,16 @@ ggsave(filename = "McCarry_l.pdf", plot = Pl_2, device = "pdf",
        path = "D:/Documents/GitHub/Thesis/Figures", 
        width = 8, height = 6, units = "in")
 
+# Incumebncy subsamples
+MC_test_3 <- rddensity(RD_baseline[RD_baseline$year == 2019 & RD_baseline$ideol_incum_r == 3,]$share_diff2_r, c = 0)
+est <- round(MC_test_3$test$t_jk, 4)
+se <- round(MC_test_3$test$p_jk,4) 
+h <- MC_test_3$h
+N <- MC_test_3$N
+Mc_plot_3 <- rdplotdensity(MC_test_3, RD_baseline[RD_baseline$year == 2019,]$share_diff2_r, plotGrid = "es", type = "both", 
+                           lcol = 1, hist = F, CItype = "line")
 
-# Covariate Balance
-
-## Table 1. Use badnwidth from main right wing result resilts. 
-rnames <- c("Height", "Area (km2)", "Distance dpto capital", "Distance market", 
-            "Distance Bogotá", "Number of credits", 
-            "Value credits", "Demobilized Paramilitaries", "Demobilized Guerrillas", 
-            "MPI", "UBN","Different incumbent", "Same incumbent")
-table_3a <- reg_tab(out_vars = c(geo_controls, soc_controls, "nr_ideol_incum_r", "r_ideol_incum_r")[-c(6:9,17, 12:14)], controls_list = list(nc = ""), 
-                   running_var = running_vars[1], subset_logic = RD_baseline$year == 2019, 
-                   digits = 5, out_vars_names = c(rnames), h = c(bw,bw))
-table_3b <- reg_tab(out_vars = c(geo_controls, soc_controls, "nl_ideol_incum_l", "l_ideol_incum_l")[-c(6:9,17, 12:14)], controls_list = list(nc = ""), 
-                    running_var = running_vars[2], subset_logic = RD_baseline$year == 2019, 
-                    digits = 5, out_vars_names = rnames, h = c(bw,bw))
-table_3 <- cbind(table_3a, table_3b[,-c(1)])
-table_3 <- table_3[-c(27,28),]
-rownames(table_3) <- NULL
-
-
-tab_3 <- kbl(table_3, booktabs = T, align = "c", format = "latex",longtable = F, 
-             caption = "Covariate Balance Table") %>% 
-  add_header_above(c("","Right-Wing" = 3, "Left-Wing" = 3)) %>% 
-  kable_styling(latex_options = c("hold_position"),
-                position = "center") %>% 
-  column_spec(1, width = "4cm") %>% 
-  footnote(general = "This table presents balance results across continuous covariates. Robust standard erros are used following (cite cattolino), across different specification varying polynomial degree.",
-           number = c("Credit variables refer to the yearly-average number and value of credits acquired by small firms as defined and recorded by Agronet (cite CEDE) before 2015.", 
-                      "Total number of demobilized soldiers before 2015, data from (CEDE).",
-                      "MPI stands for the multimentional poverty index at 2005.", 
-                      "UBN stands for unsatisfied basic needs measured at 2005.")
-  )
-
-writeLines(tab_3, "D:/Documents/GitHub/Thesis/Tables_tex/table3.tex")
+## Covariate balance 
 
 
 # Pre-trends. 
@@ -155,6 +139,3 @@ tab_5 <- kbl(table_5, booktabs = T, align = "c", format = "latex",longtable = T,
                       specificed as the difference in logs between period of election and following period", 
                       "All violence variables are normalized for every 100.000 municipality inhabitants.")
   )
-
-
-

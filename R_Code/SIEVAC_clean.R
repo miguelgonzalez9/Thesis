@@ -1,10 +1,14 @@
 #########################
 # SIEVAC data
 ##########################
-
 SIEVAC <- read_xlsx("D:/Documents/GitHub/Thesis/Data/Conflicto Armado/SIEVcAC_CNMH/CasosAB_202309.xlsx", col_names = T)
-colnames(SIEVAC) <- c("id_case", "id_case_related", "year", "month", "day", 
-                      "codmpio", "mpio", "dpto", "region", "type", "initiative", 
+vict_AB <- read_xlsx("D:/Documents/GitHub/Thesis/Data/Conflicto Armado/SIEVcAC_CNMH/VictimasAB_202403.xlsx", col_names = T)
+vict_AS <- read_xlsx("D:/Documents/GitHub/Thesis/Data/Conflicto Armado/SIEVcAC_CNMH/VictimasAS_202403.xlsx", col_names = T)
+vict_AP <- read_xlsx("D:/Documents/GitHub/Thesis/Data/Conflicto Armado/SIEVcAC_CNMH/VictimasAP_202403.xlsx", col_names = T)
+
+
+colnames(SIEVAC) <- c("id_case", "id_rel_case", "year", "month", "day", 
+                       "codmpio","mpio", "dpto","region", "type", "initiative", 
                       "attacked_unit", "ag_1", "ag_1_desc", "ag_2","ag_2_desc", "ag_3",
                       "ag_3_desc", "civil_wounded", "captured_ag", "captured", "combat_wound",
                       "military", "police", "other_state", "state_no_info", "tot_cobat_state",
@@ -42,3 +46,17 @@ SIEVAC <- SIEVAC %>% select(c(tot_cobat_state:tot_victims) | c(param_respon_ab:b
   summarise(across(everything(), ~ sum(.x, na.rm = T))) 
 SIEVAC <- SIEVAC %>% filter(codmpio != "00000") %>% select(-param_respon_ab)
 write.csv(SIEVAC,  "D:/Documents/GitHub/Thesis/Data/Final_data/SIEVAC_RD.csv")
+
+# Victims masacres. 
+vict_MA <- read_xlsx("D:/Documents/GitHub/Thesis/Data/Conflicto Armado/SIEVcAC_CNMH/VictimasMA_202309.xlsx", col_names = T)
+vict_MA <- vict_MA %>% filter(`Calidad de la Víctima o la Baja` != "COMBATIENTE")
+vict_MA <- vict_MA %>% select(-c(`Fuerza o Grupo Armado Organizado al que Pertenece el Combatiente`, 
+                                 `Descripción Fuerza o Grupo Armado Organizado al que Pertenece el Combatiente`,
+                                 `Calidad de la Víctima o la Baja`))
+colnames(vict_MA) <- c("id_case","codmpio", "mpio", "dpto", "year", "month", "day",
+                       "id_person", "sex", "ethinicity", "ocupation", "type_victim",
+                       "pol_party", "age", "lat", "long")
+vict_MA <- vict_MA %>% group_by(codmpio, year) %>% select(codmpio, year) %>% 
+  summarise(mas_kill = n()) %>% 
+  filter(year != "0000" & !(codmpio %in% c("00000", "EXPAN", "EXVEN")))
+write.csv(vict_MA,  "D:/Documents/GitHub/Thesis/Data/Final_data/SIEVAC_MA_RD.csv")
