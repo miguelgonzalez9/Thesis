@@ -634,6 +634,39 @@ writeLines(tab_3, "D:/Documents/GitHub/Thesis/Tables_tex/Final/table_cov_bal_ful
 # Figures Descriptive Statistics ------------------------------------------
 plot(density(RD_baseline %>% filter(V_ln_payments_lead1 > 0) %>% pull(V_ln_payments_lead1), na.rm = T))
 
+## Baseline RDD results
+temp <- RD_baseline
+temp_1 <- RD_baseline %>% filter(year == 2019)
+
+rd_commu_g1 <- rdplot(y = temp$pop_lead1234_lid_comunal_sector, x = temp$share_diff2_r, 
+                      p = 2, binselect = "qs")$rdplot+ labs(x = "Share of votes for right-wing candidate", 
+                                                            y = "Communal leader killing rate", 
+                                                            title = "")
+
+
+rd_commu_g2 <- rdplot(y = temp$pop_lead1234_lid_comunal_sector, x = temp$share_diff2_r,
+                      p = 1, binselect = "qs")$rdplot+ labs(x = "Share of votes for right-wing candidate", 
+                                                            y = "", 
+                                                            title = "")
+
+rd_commu_g3 <- rdplot(y = temp$ln_pop_lead1234_lid_comunal_sector, x = temp$share_diff2_r,
+                      p = 2, binselect = "qs")$rdplot+ labs(x = "Share of votes for right-wing candidate", 
+                                                            y = "Communal leader killing rate (log)", 
+                                                            title = "")
+
+rd_commu_g4 <- rdplot(y = temp$ln_pop_lead1234_lid_comunal_sector, 
+                      x = temp$share_diff2_r, p = 1, binselect = "qs")$rdplot + labs(x = "Share of votes for right-wing candidate", 
+                                                                                     y = "Communal leader killings rate (log)", 
+                                                                                     title = "") 
+rd_commu <- ggarrange(rd_commu_g1,rd_commu_g2,rd_commu_g3,rd_commu_g4,
+                      labels = c("Quadratic", "Linear","Quadratic", "Linear"))
+
+ggsave(filename = "figure9.pdf", plot = rd_commu, device = "pdf",
+       path = "D:/Documents/GitHub/Thesis/Figures", 
+       width = 8, height = 6, units = "in")
+
+
+
 ## Main RDD results. 
 temp <- RD_baseline %>% filter(param_pres == 1)
 temp_1 <- RD_baseline %>% filter(param_pres == 1 & year == 2019)

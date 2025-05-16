@@ -416,3 +416,40 @@ g3_plot <- ggplot(g3_dat, aes(x = year)) +
 ggsave(filename = "Figure4.pdf", plot = g3_plot, device = "pdf",
        path = "D:/Documents/GitHub/Thesis/Figures", 
        width = 8, height = 6, units = "in")
+
+# Summary table presentation
+sum_data <- RD_baseline %>% filter(!is.na(share_diff2_r)) %>% 
+  mutate(V1_payments_lead1 = expm1(V1_ln_payments_lead1)/1000000, 
+         V_payments_lead1 = expm1(V_ln_payments_lead1)/1000000)
+sum_data <- sum_data  %>% mutate(race = 1:dim(sum_data)[1])
+sum_data <- sum_data %>% select(IPM, population, ind_rural, 
+                                pop_lead1234_lid_assas,pop_lead1234_lid_comunal_sector,
+                                pop_lead1234_killing_sd, pop_lead1234_comunal_sector_sd,
+                                pop_lead1234_moe_pol_kill,
+                                param_acts,
+                                param_pres,
+                                race, codmpio, ideologia_0_r)
+sum_data$ideologia_0_r <- as.factor(sum_data$ideologia_0_r)
+
+rnames <- c("Multiminesional Poverty Index", "Population", "Rurality index", 
+            "Killed leaders",   "Killed communal leaders",   # Indepaz
+            "Killed leaders",   "Killed communal leaders",  # SD
+            "Killed political leaders",
+            "Paramilitary acts",
+            "Close races", "Municipalities",
+            "Other contender","Center contentder", "Left wing contender",
+            "No paramilitary presence","Paramilitary presence")
+
+tbl_sum <- summary_table(sum_data, cat_vars = c("ideologia_0_r", "param_pres"), 
+                         cont_vars = colnames(sum_data)[1:9], 
+                         count_vars = c("race", "codmpio"), 
+                         digits = 3, rnames = rnames)
+
+tab_sum <- kbl(tbl_sum, booktabs = T, align = "c", format = "latex",longtable = F,  
+               caption = "Summary Statistics") %>% 
+  kable_styling(latex_options = c("hold_position"),
+                position = "center") %>% 
+  column_spec(1, width = "4cm")
+
+writeLines(tab_sum, "D:/Documents/GitHub/Thesis/Tables_tex/table_Descript_Defense.tex")
+

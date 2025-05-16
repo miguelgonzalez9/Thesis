@@ -65,7 +65,7 @@ source("final_baseline_data.R")
 # Run all together it's not required to run cleaning first
 ###################################################################
 rm(list=ls())
-# source("functions.R") run manually
+source("functions.R") # run manually
 # Load data
 RD_baseline <- read.csv("D:/Documents/GitHub/Thesis/Data/Final_data/RD_data.csv")
 var_names <- readRDS("D:/Documents/GitHub/Thesis/Data/Final_data/vnames.RData")
@@ -111,11 +111,6 @@ RD_baseline <- RD_baseline %>% mutate(across(all_of(paste0(conflict_vars_rd)), ~
 X_it <- running_vars[1]
 
 # RD baseline results
-source("RD_results.R")
+source("RD_results_1.R")
 
-# Covariates balance and placebo test.
-source("placebo_RD.R")
-
-# DiD 
-source("DID_results.R")
 

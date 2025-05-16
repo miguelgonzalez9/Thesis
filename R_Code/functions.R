@@ -417,8 +417,9 @@ summary_table <- function(df1, cat_vars, cont_vars, count_vars, digits, rnames){
       }
     }
   }
-  
-  sum_table[,1] <- rnames
+  if (length(rnames) == dim(sum_table)[1]){
+    sum_table[,1] <- rnames
+  }
   return(sum_table)
   
 }
